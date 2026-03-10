@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { selectDataSource } from "../lib/utils.js";
+import { asPositiveInt, asTrimmedString, badRequest, isPlainObject } from "../lib/validate.js";
 
 const cartRouter = new Hono();
 
@@ -32,27 +33,32 @@ cartRouter.post("/", async (c) => {
 	const dbLogic = async (c) => {
 		const sql = c.env.SQL;
 
-		if (!Array.isArray(items) || items.length === 0) {
-			return Response.json(
-				{ error: "Items array is required" },
-				{ status: 400 },
-			);
-		}
+		if (!Array.isArray(items) || items.length === 0) return badRequest("Items array is required");
+		if (items.length > 200) return badRequest("Too many items");
 
-		const cart = await getOrCreateCart(sql, userId, anonymousId);
+		const anon = asTrimmedString(anonymousId, { maxLen: 80 });
+
+		const cart = await getOrCreateCart(sql, userId, anon);
 
 		await sql`DELETE FROM cart_items WHERE cart_id = ${cart.id}`;
 
+		let inserted = 0;
 		for (const item of items) {
-			if (!item.productVariantId || !item.quantity) continue;
+			if (!isPlainObject(item)) continue;
+			const productVariantId = asPositiveInt(item.productVariantId, { max: 2_000_000 });
+			const quantity = asPositiveInt(item.quantity, { max: 1000 });
+			if (!productVariantId || !quantity) continue;
+			inserted += 1;
 			await sql`
         INSERT INTO cart_items (cart_id, product_variant_id, quantity)
-        VALUES (${cart.id}, ${item.productVariantId}, ${item.quantity})
+        VALUES (${cart.id}, ${productVariantId}, ${quantity})
         ON CONFLICT (cart_id, product_variant_id) DO UPDATE
         SET quantity = EXCLUDED.quantity,
             updated_at = CURRENT_TIMESTAMP
       `;
 		}
+
+		if (inserted === 0) return badRequest("No valid items provided");
 
 		return Response.json({ cartId: cart.id });
 	};

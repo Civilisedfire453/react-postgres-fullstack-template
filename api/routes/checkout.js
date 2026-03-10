@@ -1,6 +1,17 @@
 import { Hono } from "hono";
 import { selectDataSource } from "../lib/utils.js";
 import { createPurchase } from "../lib/fatzebra.js";
+import {
+	asAUPostcode,
+	asAUState,
+	asEmail,
+	asOptionalTrimmedString,
+	asPhoneAU,
+	asPositiveInt,
+	asTrimmedString,
+	badRequest,
+	isPlainObject,
+} from "../lib/validate.js";
 
 const checkoutRouter = new Hono();
 
@@ -28,12 +39,37 @@ checkoutRouter.post("/complete", async (c) => {
 	const dbLogic = async (c) => {
 		const sql = c.env.SQL;
 
-		if (!cartId) {
-			return Response.json({ error: "cartId is required" }, { status: 400 });
+		const cartIdNum = asPositiveInt(cartId, { max: 2_000_000 });
+		if (!cartIdNum) return badRequest("cartId is required");
+
+		// Australia-only store: require minimal shipping + customer contact.
+		if (!isPlainObject(shipping)) return badRequest("shipping is required");
+		const shippingName = asTrimmedString(shipping.name, { maxLen: 255 });
+		const addressLine1 = asTrimmedString(shipping.addressLine1, { maxLen: 255 });
+		const addressLine2 = asOptionalTrimmedString(shipping.addressLine2, { maxLen: 255 });
+		const city = asOptionalTrimmedString(shipping.city, { maxLen: 100 });
+		const state = asAUState(shipping.state);
+		const postcode = asAUPostcode(shipping.postcode);
+		const country = "AU";
+
+		if (!shippingName) return badRequest("shipping.name is required");
+		if (!addressLine1) return badRequest("shipping.addressLine1 is required");
+		if (!state) return badRequest("shipping.state is required (AU state code)");
+		if (!postcode) return badRequest("shipping.postcode is required (4 digits)");
+
+		const email = asEmail(customerEmail);
+		if (!email) return badRequest("customerEmail is required");
+		const phone = customerPhone == null ? null : asPhoneAU(customerPhone);
+		if (customerPhone != null && !phone) return badRequest("customerPhone is invalid");
+
+		// Optional: if provided, ensure amountCents looks sane
+		if (amountCents != null) {
+			const amt = asPositiveInt(amountCents, { max: 50_000_000 });
+			if (!amt) return badRequest("amountCents must be a positive integer");
 		}
 
 		const result = await sql.begin(async (trx) => {
-			const carts = await trx`SELECT * FROM carts WHERE id = ${cartId} FOR UPDATE`;
+			const carts = await trx`SELECT * FROM carts WHERE id = ${cartIdNum} FOR UPDATE`;
 			if (carts.length === 0) throw new Error("Cart not found");
 			if (carts[0].status !== "active") {
 				return Response.json({ error: "Cart already converted" }, { status: 409 });
@@ -70,9 +106,9 @@ checkoutRouter.post("/complete", async (c) => {
         VALUES (
           ${carts[0].user_id}, 'paid', 'paid',
           ${subtotalCents}, ${taxCents}, ${shippingCents}, ${totalCents}, 'AUD',
-          ${shipping?.name ?? null}, ${shipping?.addressLine1 ?? null}, ${shipping?.addressLine2 ?? null},
-          ${shipping?.city ?? null}, ${shipping?.state ?? null}, ${shipping?.postcode ?? null}, ${shipping?.country ?? null},
-          ${customerEmail ?? null}, ${customerPhone ?? null}
+          ${shippingName}, ${addressLine1}, ${addressLine2 ?? null},
+          ${city ?? null}, ${state}, ${postcode}, ${country},
+          ${email}, ${phone ?? null}
         )
         RETURNING *
       `;
@@ -95,10 +131,10 @@ checkoutRouter.post("/complete", async (c) => {
 
 			await trx`
         INSERT INTO payments (order_id, gateway_reference, amount_cents, currency, status, raw_response)
-        VALUES (${order.id}, ${gatewayReference ?? null}, ${totalCents}, 'AUD', 'succeeded', ${JSON.stringify({ source: "hpp", cartId })})
+        VALUES (${order.id}, ${gatewayReference ?? null}, ${totalCents}, 'AUD', 'succeeded', ${JSON.stringify({ source: "hpp", cartId: cartIdNum })})
       `;
 
-			await trx`UPDATE carts SET status = 'converted', updated_at = CURRENT_TIMESTAMP WHERE id = ${cartId}`;
+			await trx`UPDATE carts SET status = 'converted', updated_at = CURRENT_TIMESTAMP WHERE id = ${cartIdNum}`;
 
 			return { order, totalCents };
 		});

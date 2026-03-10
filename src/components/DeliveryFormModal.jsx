@@ -9,7 +9,7 @@ function DeliveryFormModal({ isOpen, onClose, onSubmit, validation }) {
 	const [city, setCity] = useState("");
 	const [state, setState] = useState("");
 	const [postcode, setPostcode] = useState("");
-	const [country, setCountry] = useState("AU");
+	const country = "AU";
 	const [error, setError] = useState("");
 
 	const handleSubmit = (e) => {
@@ -34,6 +34,19 @@ function DeliveryFormModal({ isOpen, onClose, onSubmit, validation }) {
 			setError("Delivery address is required");
 			return;
 		}
+		if (!state.trim()) {
+			setError("State is required");
+			return;
+		}
+		const pc = postcode.trim();
+		if (!pc) {
+			setError("Postcode is required");
+			return;
+		}
+		if (!/^\d{4}$/.test(pc)) {
+			setError("Postcode must be 4 digits");
+			return;
+		}
 		onSubmit({
 			name: trimmedName,
 			email: trimmedEmail,
@@ -42,8 +55,8 @@ function DeliveryFormModal({ isOpen, onClose, onSubmit, validation }) {
 			addressLine2: addressLine2.trim() || null,
 			city: city.trim() || null,
 			state: state.trim() || null,
-			postcode: postcode.trim() || null,
-			country: country.trim() || "AU",
+			postcode: pc,
+			country,
 		});
 		onClose();
 	}
@@ -157,13 +170,22 @@ function DeliveryFormModal({ isOpen, onClose, onSubmit, validation }) {
 						</div>
 						<div>
 							<label className="block text-sm font-medium text-slate-700 mb-1">State</label>
-							<input
-								type="text"
+							<select
 								value={state}
 								onChange={(e) => setState(e.target.value)}
-								className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
-								placeholder="NSW"
-							/>
+								className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
+								required
+							>
+								<option value="">Select…</option>
+								<option value="ACT">ACT</option>
+								<option value="NSW">NSW</option>
+								<option value="NT">NT</option>
+								<option value="QLD">QLD</option>
+								<option value="SA">SA</option>
+								<option value="TAS">TAS</option>
+								<option value="VIC">VIC</option>
+								<option value="WA">WA</option>
+							</select>
 						</div>
 						<div>
 							<label className="block text-sm font-medium text-slate-700 mb-1">Postcode</label>
@@ -173,24 +195,14 @@ function DeliveryFormModal({ isOpen, onClose, onSubmit, validation }) {
 								onChange={(e) => setPostcode(e.target.value)}
 								className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
 								placeholder="2000"
+								inputMode="numeric"
+								maxLength={4}
+								required
 							/>
 						</div>
 					</div>
 
-					<div>
-						<label className="block text-sm font-medium text-slate-700 mb-1">Country</label>
-						<select
-							value={country}
-							onChange={(e) => setCountry(e.target.value)}
-							className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
-						>
-							<option value="AU">Australia</option>
-							<option value="NZ">New Zealand</option>
-							<option value="US">United States</option>
-							<option value="GB">United Kingdom</option>
-							<option value="OTHER">Other</option>
-						</select>
-					</div>
+					<div className="text-xs text-slate-500 pt-1">Shipping country: Australia</div>
 
 					<div className="flex gap-3 pt-2">
 						<button type="button" onClick={onClose} className="btn flex-1">

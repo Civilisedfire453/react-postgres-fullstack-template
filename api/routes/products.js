@@ -122,6 +122,8 @@ productsRouter.get("/", async (c) => {
 		const sql = c.env.SQL;
 
 		let whereClauses = [];
+		// Public catalog: only show active products
+		whereClauses.push(sql`p.is_active = true`);
 
 		if (category) {
 			whereClauses.push(sql`p.category = ${category}`);
@@ -196,6 +198,7 @@ productsRouter.get("/", async (c) => {
 
 	const mockLogic = async () => {
 		let products = getMockProducts();
+		products = products.filter((p) => p.is_active);
 
 		if (category) {
 			products = products.filter((p) => p.category === category);
@@ -266,7 +269,7 @@ productsRouter.get("/:id", async (c) => {
       FROM products p
       LEFT JOIN product_variants v ON v.product_id = p.id
       LEFT JOIN product_images i ON i.product_id = p.id
-      WHERE p.id = ${id}
+      WHERE p.id = ${id} AND p.is_active = true
       GROUP BY p.id
     `;
 
@@ -280,7 +283,7 @@ productsRouter.get("/:id", async (c) => {
 	const mockLogic = async () => {
 		const products = getMockProducts();
 		const productId = parseInt(id, 10);
-		const product = products.find((p) => p.id === productId);
+		const product = products.find((p) => p.id === productId && p.is_active);
 
 		if (!product) {
 			return Response.json({ error: "Product not found" }, { status: 404 });

@@ -1,8 +1,67 @@
 import { Hono } from "hono";
 import { selectDataSource } from "../lib/utils.js";
 import { requireAdmin } from "../lib/auth.js";
+import {
+	asNonNegativeInt,
+	asOptionalTrimmedString,
+	asPositiveInt,
+	asTrimmedString,
+	badRequest,
+	isPlainObject,
+} from "../lib/validate.js";
 
 const adminRouter = new Hono();
+
+// GET /api/admin/products - list all products (including inactive) for admin
+adminRouter.get("/products", async (c) => {
+	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
+		const sql = c.env.SQL;
+
+		const results = await sql`
+      SELECT
+        p.id,
+        p.name,
+        p.description,
+        p.brand,
+        p.category,
+        p.is_active,
+        COALESCE(
+          json_agg(
+            DISTINCT jsonb_build_object(
+              'id', v.id,
+              'sku', v.sku,
+              'name', v.name,
+              'capacity_liters', v.capacity_liters,
+              'pack_size', v.pack_size,
+              'price_cents', v.price_cents,
+              'stock_quantity', v.stock_quantity,
+              'reorder_threshold', v.reorder_threshold
+            )
+          ) FILTER (WHERE v.id IS NOT NULL),
+          '[]'
+        ) AS variants
+      FROM products p
+      LEFT JOIN product_variants v ON v.product_id = p.id
+      GROUP BY p.id
+      ORDER BY p.name ASC
+    `;
+
+		return Response.json({ products: results });
+	};
+
+	const mockLogic = async () => {
+		return Response.json(
+			{ error: "Admin API requires database connection" },
+			{ status: 503 },
+		);
+	};
+
+	return selectDataSource(c, dbLogic, mockLogic);
+});
 
 // POST /api/admin/products - create product with optional variants
 adminRouter.post("/products", async (c) => {
@@ -16,30 +75,55 @@ adminRouter.post("/products", async (c) => {
 		}
 		const sql = c.env.SQL;
 
-		if (!product?.name) {
-			return Response.json(
-				{ error: "Product name is required" },
-				{ status: 400 },
-			);
+		if (!isPlainObject(product)) return badRequest("product is required");
+		const name = asTrimmedString(product.name, { maxLen: 255 });
+		if (!name) return badRequest("Product name is required");
+		const description = asOptionalTrimmedString(product.description, { maxLen: 2000 });
+		const brand = asOptionalTrimmedString(product.brand, { maxLen: 255 });
+		const category = asOptionalTrimmedString(product.category, { maxLen: 255 });
+		const isActive = typeof product.is_active === "boolean" ? product.is_active : true;
+
+		if (!Array.isArray(variants) || variants.length < 1) {
+			return badRequest("At least one variant is required");
 		}
+		if (variants.length > 50) return badRequest("Too many variants");
 
 		const [createdProduct] = await sql`
       INSERT INTO products (name, description, brand, category, is_active)
       VALUES (
-        ${product.name},
-        ${product.description ?? null},
-        ${product.brand ?? null},
-        ${product.category ?? null},
-        ${product.is_active ?? true}
+        ${name},
+        ${description ?? null},
+        ${brand ?? null},
+        ${category ?? null},
+        ${isActive}
       )
       RETURNING *
     `;
 
 		const createdVariants = [];
 
-		if (Array.isArray(variants)) {
-			for (const v of variants) {
-				const [variant] = await sql`
+		for (const v of variants) {
+			if (!isPlainObject(v)) return badRequest("Invalid variant payload");
+			const sku = asTrimmedString(v.sku, { maxLen: 80 });
+			const vName = asTrimmedString(v.name, { maxLen: 255 });
+			const priceCents = asPositiveInt(v.price_cents, { max: 50_000_000 });
+			const packSize = asPositiveInt(v.pack_size ?? 1, { max: 10_000 }) ?? 1;
+			const stockQty = asNonNegativeInt(v.stock_quantity ?? 0, { max: 1_000_000 }) ?? 0;
+			const reorderThreshold =
+				asNonNegativeInt(v.reorder_threshold ?? 0, { max: 1_000_000 }) ?? 0;
+
+			if (!sku) return badRequest("Variant sku is required");
+			if (!vName) return badRequest("Variant name is required");
+			if (!priceCents) return badRequest("Variant price_cents must be a positive integer");
+
+			const capacityLiters =
+				v.capacity_liters == null
+					? null
+					: Number.isFinite(Number(v.capacity_liters))
+						? Number(v.capacity_liters)
+						: null;
+
+			const [variant] = await sql`
           INSERT INTO product_variants (
             product_id,
             sku,
@@ -52,18 +136,17 @@ adminRouter.post("/products", async (c) => {
           )
           VALUES (
             ${createdProduct.id},
-            ${v.sku},
-            ${v.name},
-            ${v.capacity_liters ?? null},
-            ${v.pack_size ?? 1},
-            ${v.price_cents},
-            ${v.stock_quantity ?? 0},
-            ${v.reorder_threshold ?? 0}
+            ${sku},
+            ${vName},
+            ${capacityLiters},
+            ${packSize},
+            ${priceCents},
+            ${stockQty},
+            ${reorderThreshold}
           )
           RETURNING *
         `;
-				createdVariants.push(variant);
-			}
+			createdVariants.push(variant);
 		}
 
 		return Response.json({ product: createdProduct, variants: createdVariants });
@@ -195,7 +278,8 @@ adminRouter.get("/inventory", async (c) => {
         v.*,
         p.name AS product_name,
         p.brand,
-        p.category
+        p.category,
+        p.is_active AS product_is_active
       FROM product_variants v
       JOIN products p ON p.id = v.product_id
     `;

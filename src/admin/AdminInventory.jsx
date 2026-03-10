@@ -95,9 +95,22 @@ function AdminInventory() {
 						const isLow = v.stock_quantity <= v.reorder_threshold;
 						const isOut = v.stock_quantity <= 0;
 						const isAdjusting = adjustingId === v.id;
+						const inactive = v.product_is_active === false;
 						return (
-							<tr key={v.id} className={isOut ? "bg-red-50" : isLow ? "bg-amber-50" : ""}>
-								<td>{v.product_name}</td>
+							<tr
+								key={v.id}
+								className={`${isOut ? "bg-red-50" : isLow ? "bg-amber-50" : ""} ${inactive ? "opacity-70" : ""}`}
+							>
+								<td>
+									<div className="flex items-center gap-2">
+										<span>{v.product_name}</span>
+										{inactive && (
+											<span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
+												Inactive
+											</span>
+										)}
+									</div>
+								</td>
 								<td>{v.name}</td>
 								<td className="font-mono text-sm">{v.sku}</td>
 								<td className="font-semibold">{v.stock_quantity}</td>

@@ -9,6 +9,7 @@ function AdminProducts() {
 	const [addOpen, setAddOpen] = useState(false);
 	const [saving, setSaving] = useState(false);
 	const [formError, setFormError] = useState(null);
+	const [togglingId, setTogglingId] = useState(null);
 
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
@@ -22,7 +23,7 @@ function AdminProducts() {
 
 	const load = useCallback(async () => {
 		try {
-			const res = await authFetch("/api/products");
+			const res = await authFetch("/api/admin/products");
 			if (!res.ok) throw new Error(`API returned status: ${res.status}`);
 			const data = await res.json();
 			setProducts(data.products ?? []);
@@ -35,9 +36,44 @@ function AdminProducts() {
 		}
 	}, [authFetch]);
 
+	const toggleActive = async (productId, nextActive) => {
+		setTogglingId(productId);
+		setError(null);
+		try {
+			const res = await authFetch(`/api/admin/products/${productId}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ is_active: nextActive }),
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || "Failed to update product");
+			}
+			setProducts((prev) =>
+				prev.map((p) => (p.id === productId ? { ...p, is_active: nextActive } : p)),
+			);
+		} catch (e) {
+			setError(e.message || "Failed to update product");
+		} finally {
+			setTogglingId(null);
+		}
+	};
+
 	useEffect(() => {
 		load();
 	}, [load]);
+
+	const categories = Array.from(
+		new Set(
+			(products ?? [])
+				.map((p) => (p?.category ?? "").trim())
+				.filter(Boolean),
+		),
+	).sort((a, b) => a.localeCompare(b));
+
+	const existingCategoryKeys = new Set(
+		categories.map((c) => c.trim().toLowerCase()),
+	);
 
 	const openAdd = () => {
 		setName("");
@@ -59,6 +95,15 @@ function AdminProducts() {
 		if (!name.trim()) {
 			setFormError("Product name is required");
 			return;
+		}
+		if (category.trim()) {
+			const key = category.trim().toLowerCase();
+			if (existingCategoryKeys.has(key) && !categories.includes(category.trim())) {
+				setFormError(
+					`Category already exists. Please select "${categories.find((c) => c.trim().toLowerCase() === key)}" from the dropdown.`,
+				);
+				return;
+			}
 		}
 		const skuVal = sku.trim() || `SKU-${Date.now()}`;
 		const variantNameVal = variantName.trim() || name.trim();
@@ -145,11 +190,30 @@ function AdminProducts() {
 				</thead>
 				<tbody>
 					{products.map((p) => (
-						<tr key={p.id}>
+						<tr key={p.id} className={!p.is_active ? "opacity-70" : ""}>
 							<td>{p.name}</td>
 							<td>{p.brand ?? "—"}</td>
 							<td>{p.category ?? "—"}</td>
-							<td>{p.is_active ? "Yes" : "No"}</td>
+							<td>
+								<button
+									type="button"
+									disabled={togglingId === p.id}
+									onClick={() => toggleActive(p.id, !p.is_active)}
+									className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
+										p.is_active
+											? "bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
+											: "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+									} ${togglingId === p.id ? "opacity-60 cursor-not-allowed" : ""}`}
+									title="Toggle active"
+								>
+									<span
+										className={`h-2.5 w-2.5 rounded-full ${
+											p.is_active ? "bg-green-500" : "bg-slate-400"
+										}`}
+									/>
+									{p.is_active ? "Active" : "Inactive"}
+								</button>
+							</td>
 							<td>{p.variants?.length ?? 0}</td>
 						</tr>
 					))}
@@ -226,12 +290,29 @@ function AdminProducts() {
 								</div>
 								<div>
 									<label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+									<div className="flex gap-2">
+										<select
+											value={category}
+											onChange={(e) => setCategory(e.target.value)}
+											className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
+										>
+											<option value="">Select a category…</option>
+											{categories.map((c) => (
+												<option key={c} value={c}>
+													{c}
+												</option>
+											))}
+										</select>
+									</div>
+									<p className="text-xs text-slate-500 mt-1">
+										Don’t see it? You can type a new one below.
+									</p>
 									<input
 										type="text"
 										value={category}
 										onChange={(e) => setCategory(e.target.value)}
-										className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
-										placeholder="e.g. Pitcher Filters"
+										className="mt-2 w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
+										placeholder="Or type a new category (optional)"
 									/>
 								</div>
 							</div>

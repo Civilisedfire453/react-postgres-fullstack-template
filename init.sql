@@ -163,6 +163,13 @@ VALUES
     (6, 'AquaMax RO System', 'Reverse‑osmosis system with remineralisation for premium drinking water quality.', 'AquaMax', 'Reverse Osmosis', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
+-- Ensure the products SERIAL sequence is ahead of seeded IDs
+SELECT setval(
+  pg_get_serial_sequence('products', 'id'),
+  (SELECT COALESCE(MAX(id), 1) FROM products),
+  true
+);
+
 INSERT INTO product_variants (
     product_id,
     sku,
