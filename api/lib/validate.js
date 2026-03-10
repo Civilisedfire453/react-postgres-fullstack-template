@@ -40,11 +40,10 @@ export function asEmail(value) {
 }
 
 export function asPhoneAU(value) {
-	// Keep this permissive: allow +, spaces, parentheses, hyphens. Store normalized digits if desired later.
 	const s = asTrimmedString(value, { maxLen: 50 });
 	if (!s) return null;
-	const ok = /^[0-9+()\-\s]{6,50}$/.test(s);
-	return ok ? s : null;
+	const digits = s.replace(/\D/g, "");
+	return /^\d{10}$/.test(digits) ? digits : null;
 }
 
 export function asAUState(value) {

@@ -78,7 +78,8 @@ function AdminInventory() {
 					<span>Low stock only</span>
 				</label>
 			</div>
-			<table className="data-table">
+			<div className="overflow-x-auto">
+			<table className="data-table min-w-[760px]">
 				<thead>
 					<tr>
 						<th>Product</th>
@@ -102,7 +103,7 @@ function AdminInventory() {
 								className={`${isOut ? "bg-red-50" : isLow ? "bg-amber-50" : ""} ${inactive ? "opacity-70" : ""}`}
 							>
 								<td>
-									<div className="flex items-center gap-2">
+									<div className="flex flex-wrap items-center gap-2">
 										<span>{v.product_name}</span>
 										{inactive && (
 											<span className="inline-flex px-2 py-0.5 rounded-full text-xs font-medium bg-slate-200 text-slate-700">
@@ -176,6 +177,7 @@ function AdminInventory() {
 					})}
 				</tbody>
 			</table>
+			</div>
 			{variants.length === 0 && (
 				<p className="text-gray-500 mt-4">
 					{lowStockOnly ? "No low-stock variants." : "No variants found."}

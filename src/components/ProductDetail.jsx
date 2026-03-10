@@ -5,6 +5,7 @@ import { publicAssetUrl } from "../lib/publicAssetUrl.js";
 
 function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	const navigate = useNavigate();
+	const [imageFailed, setImageFailed] = useState(false);
 	const [product, setProduct] = useState(null);
 	const [selectedVariantId, setSelectedVariantId] = useState(null);
 	const [quantity, setQuantity] = useState(1);
@@ -55,6 +56,7 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	const fallbackSeed = encodeURIComponent(String(product.id ?? product.name ?? "product"));
 	const fallbackImageUrl = `https://picsum.photos/seed/${fallbackSeed}/1200/800`;
 	const imageUrl = publicAssetUrl(primaryImage?.image_url || fallbackImageUrl);
+	const safeImageUrl = imageFailed ? publicAssetUrl("/images/filters/generic.svg") : imageUrl;
 	const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
 
 	const breadcrumbItems = [{ label: "All Filters", value: null }];
@@ -131,14 +133,15 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 				<div className="card">
 					<div className="md:flex gap-10">
 						<div className="md:w-1/3 lg:w-1/4 flex-shrink-0 mb-8 md:mb-0">
-							{imageUrl ? (
+							{safeImageUrl ? (
 								<img
-									src={imageUrl}
+									src={safeImageUrl}
 									alt={product.name}
-									className="w-full h-full object-contain rounded-md border border-gray-200"
+									className="w-full h-64 sm:h-72 md:h-full object-contain rounded-md border border-gray-200"
+									onError={() => setImageFailed(true)}
 								/>
 							) : (
-								<div className="w-full h-48 flex items-center justify-center border border-gray-200 rounded-md text-gray-400">
+								<div className="w-full h-64 sm:h-72 md:h-48 flex items-center justify-center border border-gray-200 rounded-md text-gray-400">
 									No image
 								</div>
 							)}
@@ -203,7 +206,7 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 								</div>
 							)}
 
-							<div className="mt-6 flex items-center gap-4">
+							<div className="mt-6 flex flex-wrap items-center gap-3 sm:gap-4">
 								<label className="text-sm text-gray-700">
 									Quantity
 									<input
@@ -216,16 +219,16 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 										className="ml-2 w-20 px-2 py-1 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
 									/>
 								</label>
-							<button
-								type="button"
-								className="btn-primary transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
-								onClick={handleAddToCart}
-								disabled={saving || !selectedVariant}
-							>
-								{saving ? "Adding..." : "Add to cart"}
-							</button>
+								<button
+									type="button"
+									className="btn-primary w-full sm:w-auto transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+									onClick={handleAddToCart}
+									disabled={saving || !selectedVariant}
+								>
+									{saving ? "Adding..." : "Add to cart"}
+								</button>
 								{error && (
-									<div className="text-sm text-red-600">{error}</div>
+									<div className="text-sm text-red-600 w-full">{error}</div>
 								)}
 							</div>
 						</div>

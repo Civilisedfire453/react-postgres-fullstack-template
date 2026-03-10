@@ -61,15 +61,15 @@ function AdminOrders() {
 
 	return (
 		<div className="card">
-			<div className="flex items-center justify-between gap-4 mb-4">
+			<div className="flex flex-wrap items-center justify-between gap-3 mb-4">
 				<h2>Orders</h2>
-				<span className="text-sm text-slate-500">Auto-refreshes every 15s</span>
-				<button type="button" onClick={load} className="btn text-sm">
+				<span className="text-xs sm:text-sm text-slate-500">Auto-refreshes every 15s</span>
+				<button type="button" onClick={load} className="btn text-sm w-full sm:w-auto">
 					Refresh now
 				</button>
 			</div>
 			<div className="overflow-x-auto">
-				<table className="data-table">
+				<table className="data-table min-w-[980px]">
 					<thead>
 						<tr>
 							<th>ID</th>
@@ -87,7 +87,7 @@ function AdminOrders() {
 					<tbody>
 						{orders.map((o) => (
 							<tr key={o.id}>
-								<td>{o.id}</td>
+								<td className="font-mono text-xs sm:text-sm">{o.public_order_id ?? o.id}</td>
 								<td>{o.shipping_name ?? "-"}</td>
 								<td>{o.customer_email ?? "-"}</td>
 								<td>{o.customer_phone ?? "-"}</td>

@@ -87,6 +87,7 @@ CREATE TABLE IF NOT EXISTS cart_items (
 -- Orders
 CREATE TABLE IF NOT EXISTS orders (
     id SERIAL PRIMARY KEY,
+    public_order_id VARCHAR(24) UNIQUE NOT NULL,
     user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
     status VARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'paid', 'shipped', 'cancelled'
     payment_status VARCHAR(20) NOT NULL DEFAULT 'pending', -- 'pending', 'paid', 'failed', 'refunded'
@@ -234,6 +235,14 @@ WHERE product_id IN (1, 2, 3, 4, 5, 6);
 -- Add customer contact columns to orders if they don't exist (for existing DBs)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS public_order_id VARCHAR(24);
+
+-- Backfill and enforce public random-looking order IDs for existing databases
+UPDATE orders
+SET public_order_id = 'ORD-' || upper(substr(md5(id::text || clock_timestamp()::text || random()::text), 1, 10))
+WHERE public_order_id IS NULL;
+
+CREATE UNIQUE INDEX IF NOT EXISTS orders_public_order_id_key ON orders(public_order_id);
 
 -- Add is_active to variants for existing DBs
 ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;

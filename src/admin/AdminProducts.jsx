@@ -244,7 +244,7 @@ function AdminProducts() {
 				<button
 					type="button"
 					onClick={openAdd}
-					className="btn-primary inline-flex items-center gap-2"
+					className="btn-primary inline-flex items-center gap-2 w-full sm:w-auto justify-center"
 				>
 					<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -253,7 +253,8 @@ function AdminProducts() {
 				</button>
 			</div>
 
-			<table className="data-table">
+			<div className="overflow-x-auto">
+			<table className="data-table min-w-[720px]">
 				<thead>
 					<tr>
 						<th>Name</th>
@@ -327,6 +328,7 @@ function AdminProducts() {
 					))}
 				</tbody>
 			</table>
+			</div>
 
 			{variantPicker && (
 				<div

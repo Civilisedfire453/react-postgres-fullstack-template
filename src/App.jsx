@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Droplets, ShieldCheck, Sparkles, Truck, Settings2, ShoppingBag } from "lucide-react";
+import { Droplets, ShieldCheck, Sparkles, Truck, Settings2, ShoppingBag, SlidersHorizontal, X } from "lucide-react";
 import Breadcrumbs from "./components/Breadcrumbs.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import ProductList from "./components/ProductList.jsx";
@@ -27,6 +27,7 @@ function App() {
 	const [cartCount, setCartCount] = useState(0);
 	const [cartRefresh, setCartRefresh] = useState(0);
 	const [cartDrawerOpen, setCartDrawerOpen] = useState(false);
+	const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 	const [anonId] = useState(getOrCreateAnonId);
 
 	const { productId } = params;
@@ -53,7 +54,9 @@ function App() {
 	}, [cartId, cartRefresh]);
 
 	useEffect(() => {
-		const loadCategories = async () => {
+		let cancelled = false;
+
+		const loadCategories = async (attempt = 0) => {
 			try {
 				const res = await fetch("/api/products");
 				if (!res.ok) {
@@ -70,13 +73,31 @@ function App() {
 				const cats = Object.entries(byCategory)
 					.map(([name, count]) => ({ name, count }))
 					.sort((a, b) => a.name.localeCompare(b.name));
-				setCategories(cats);
+				if (!cancelled) {
+					setCategories(cats);
+				}
 			} catch (e) {
 				console.error("Error loading categories", e);
+				// Retry a few times for local/dev cold starts.
+				if (!cancelled && attempt < 2) {
+					setTimeout(() => {
+						void loadCategories(attempt + 1);
+					}, 800 * (attempt + 1));
+				}
 			}
 		};
-		loadCategories();
+		void loadCategories();
+
+		return () => {
+			cancelled = true;
+		};
 	}, []);
+
+	const visibleCategories = useMemo(() => {
+		if (categories.length > 0) return categories;
+		if (!activeCategory) return categories;
+		return [{ name: activeCategory, count: 0 }];
+	}, [categories, activeCategory]);
 
 	const handleSelectCategory = (category) => {
 		if (category) {
@@ -126,9 +147,19 @@ function App() {
 	return (
 		<div className="layout app-shell">
 			<header className="fixed top-0 right-0 left-0 md:left-[280px] h-14 bg-white/95 backdrop-blur border-b border-slate-200/80 z-20 flex items-center justify-between px-4 md:px-6 transition-all duration-300">
-				<Link to="/" className="font-serif text-lg font-semibold text-slate-800 hover:text-teal-600 transition-colors">
-					PureFlow
-				</Link>
+				<div className="flex items-center gap-2.5">
+					<button
+						type="button"
+						onClick={() => setMobileFiltersOpen(true)}
+						className="md:hidden inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 text-slate-700 bg-white"
+					>
+						<SlidersHorizontal className="w-4 h-4" strokeWidth={1.8} />
+						<span className="text-sm font-medium">Filters</span>
+					</button>
+					<Link to="/" className="font-serif text-lg font-semibold text-slate-800 hover:text-teal-600 transition-colors">
+						PureFlow
+					</Link>
+				</div>
 				<div className="flex items-center gap-3 sm:gap-5 text-sm">
 					<motion.button
 						type="button"
@@ -152,7 +183,7 @@ function App() {
 				</div>
 			</header>
 			<Sidebar
-				genres={categories}
+				genres={visibleCategories}
 				activeGenre={activeCategory}
 				onSelectGenre={handleSelectCategory}
 				counts
@@ -168,38 +199,6 @@ function App() {
 					exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
 					transition={{ duration: 0.25, ease: "easeOut" }}
 				>
-					{!productId && (
-						<div className="md:hidden -mx-1 mb-4 overflow-x-auto pb-1">
-							<div className="flex items-center gap-2 min-w-max px-1">
-								<button
-									type="button"
-									onClick={() => handleSelectCategory(null)}
-									className={
-										activeCategory === null
-											? "px-3 py-1.5 rounded-full text-sm bg-teal-100 text-teal-800 border border-teal-200"
-											: "px-3 py-1.5 rounded-full text-sm bg-white text-slate-600 border border-slate-200"
-									}
-								>
-									All
-								</button>
-								{categories.map((category) => (
-									<button
-										key={category.name}
-										type="button"
-										onClick={() => handleSelectCategory(category.name)}
-										className={
-											activeCategory === category.name
-												? "px-3 py-1.5 rounded-full text-sm bg-teal-100 text-teal-800 border border-teal-200"
-												: "px-3 py-1.5 rounded-full text-sm bg-white text-slate-600 border border-slate-200"
-										}
-									>
-										{category.name}
-									</button>
-								))}
-							</div>
-						</div>
-					)}
-
 					{!productId && (
 						<Breadcrumbs
 							items={[
@@ -282,6 +281,84 @@ function App() {
 						</div>
 					)}
 				</motion.main>
+			</AnimatePresence>
+
+			<AnimatePresence>
+				{mobileFiltersOpen && (
+					<>
+						<motion.div
+							className="fixed inset-0 z-40 bg-slate-900/35 backdrop-blur-sm md:hidden"
+							onClick={() => setMobileFiltersOpen(false)}
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.18 }}
+						/>
+						<motion.aside
+							className="fixed top-0 left-0 bottom-0 z-50 w-[86vw] max-w-[340px] bg-white border-r border-slate-200 shadow-xl md:hidden flex flex-col"
+							initial={{ x: -24, opacity: 0 }}
+							animate={{ x: 0, opacity: 1 }}
+							exit={{ x: -20, opacity: 0 }}
+							transition={{ type: "spring", stiffness: 420, damping: 36 }}
+						>
+							<div className="flex items-center justify-between px-5 py-4 border-b border-slate-200">
+								<div className="font-serif text-2xl font-semibold text-slate-800">Filters</div>
+								<button
+									type="button"
+									onClick={() => setMobileFiltersOpen(false)}
+									className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+									aria-label="Close filters"
+								>
+									<X className="w-5 h-5" />
+								</button>
+							</div>
+
+							<nav className="flex-1 overflow-y-auto px-4 py-5 space-y-2">
+								<button
+									type="button"
+									onClick={() => {
+										handleSelectCategory(null);
+										setMobileFiltersOpen(false);
+									}}
+									className={
+										activeCategory === null
+											? "w-full text-left px-4 py-3 rounded-xl bg-teal-50 text-teal-800 font-medium"
+											: "w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50"
+									}
+								>
+									All Filters
+								</button>
+
+								<div className="px-4 pt-3 pb-1 text-xs font-semibold tracking-wider text-slate-400 uppercase">
+									Categories
+								</div>
+
+								{visibleCategories.map((category) => (
+									<button
+										key={category.name}
+										type="button"
+										onClick={() => {
+											handleSelectCategory(category.name);
+											setMobileFiltersOpen(false);
+										}}
+										className={
+											activeCategory === category.name
+												? "w-full text-left px-4 py-3 rounded-xl bg-teal-50 text-teal-800 font-medium"
+												: "w-full text-left px-4 py-3 rounded-xl text-slate-600 hover:bg-slate-50"
+										}
+									>
+										{category.name}
+										<span className="ml-2 text-xs text-slate-400">({category.count})</span>
+									</button>
+								))}
+							</nav>
+
+							<div className="px-5 py-4 border-t border-slate-200 text-xs text-slate-400">
+								Powered by <span className="text-teal-600">Cloudflare</span>
+							</div>
+						</motion.aside>
+					</>
+				)}
 			</AnimatePresence>
 
 			<CartDrawer

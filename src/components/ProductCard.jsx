@@ -1,11 +1,14 @@
+import { useState } from "react";
 import { ArrowRight, ImageOff } from "lucide-react";
 import { publicAssetUrl } from "../lib/publicAssetUrl.js";
 
 function ProductCard({ product, onClick }) {
+	const [imageFailed, setImageFailed] = useState(false);
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
 	const fallbackSeed = encodeURIComponent(String(product.id ?? product.name ?? "product"));
 	const fallbackImageUrl = `https://picsum.photos/seed/${fallbackSeed}/1200/800`;
 	const imageUrl = publicAssetUrl(primaryImage?.image_url || fallbackImageUrl);
+	const safeImageUrl = imageFailed ? publicAssetUrl("/images/filters/generic.svg") : imageUrl;
 	const minPriceCents = product.variants?.length
 		? Math.min(...product.variants.map((v) => v.price_cents))
 		: null;
@@ -26,11 +29,12 @@ function ProductCard({ product, onClick }) {
 						Only {totalStock} left
 					</span>
 				)}
-				{imageUrl ? (
+				{safeImageUrl ? (
 					<img
-						src={imageUrl}
+						src={safeImageUrl}
 						alt={product.name}
 						className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
+						onError={() => setImageFailed(true)}
 					/>
 				) : (
 					<div className="w-full h-full flex items-center justify-center text-slate-400">

@@ -15,6 +15,20 @@ import {
 
 const checkoutRouter = new Hono();
 
+function generatePublicOrderId() {
+	const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+	let randomPart = "";
+	const bytes = crypto.getRandomValues(new Uint8Array(10));
+	for (const b of bytes) {
+		randomPart += alphabet[b % alphabet.length];
+	}
+	return `ORD-${randomPart}`;
+}
+
+function isPublicOrderIdCollision(err) {
+	return err?.code === "23505" && String(err?.message ?? "").includes("public_order_id");
+}
+
 // GET /api/checkout/config - returns public config for Fat Zebra SDK (e.g. merchant username)
 checkoutRouter.get("/config", async (c) => {
 	const username = c.env.FATZEBRA_USERNAME || null;
@@ -95,23 +109,36 @@ checkoutRouter.post("/complete", async (c) => {
 			const shippingCents = subtotalCents > 10000 ? 0 : 1500;
 			const totalCents = subtotalCents + taxCents + shippingCents;
 
-			const [order] = await trx`
-        INSERT INTO orders (
-          user_id, status, payment_status,
-          subtotal_cents, tax_cents, shipping_cents, total_cents, currency,
-          shipping_name, shipping_address_line1, shipping_address_line2,
-          shipping_city, shipping_state, shipping_postcode, shipping_country,
-          customer_email, customer_phone
-        )
-        VALUES (
-          ${carts[0].user_id}, 'paid', 'paid',
-          ${subtotalCents}, ${taxCents}, ${shippingCents}, ${totalCents}, 'AUD',
-          ${shippingName}, ${addressLine1}, ${addressLine2 ?? null},
-          ${city ?? null}, ${state}, ${postcode}, ${country},
-          ${email}, ${phone ?? null}
-        )
-        RETURNING *
-      `;
+			let order = null;
+			for (let i = 0; i < 6; i += 1) {
+				try {
+					const publicOrderId = generatePublicOrderId();
+					const [created] = await trx`
+				INSERT INTO orders (
+					public_order_id, user_id, status, payment_status,
+					subtotal_cents, tax_cents, shipping_cents, total_cents, currency,
+					shipping_name, shipping_address_line1, shipping_address_line2,
+					shipping_city, shipping_state, shipping_postcode, shipping_country,
+					customer_email, customer_phone
+				)
+				VALUES (
+					${publicOrderId}, ${carts[0].user_id}, 'paid', 'paid',
+					${subtotalCents}, ${taxCents}, ${shippingCents}, ${totalCents}, 'AUD',
+					${shippingName}, ${addressLine1}, ${addressLine2 ?? null},
+					${city ?? null}, ${state}, ${postcode}, ${country},
+					${email}, ${phone ?? null}
+				)
+				RETURNING *
+			`;
+					order = created;
+					break;
+				} catch (err) {
+					if (!isPublicOrderIdCollision(err)) throw err;
+				}
+			}
+			if (!order) {
+				throw new Error("Could not generate unique order ID");
+			}
 
 			for (const row of items) {
 				const lineTotal = row.price_cents * row.quantity;
@@ -140,7 +167,7 @@ checkoutRouter.post("/complete", async (c) => {
 		});
 
 		if (result instanceof Response) return result;
-		return Response.json({ orderId: result.order.id, status: "paid" });
+		return Response.json({ orderId: result.order.public_order_id, status: "paid" });
 	};
 
 	const mockLogic = () =>
@@ -306,42 +333,57 @@ checkoutRouter.post("/pay", async (c) => {
 			const shippingCents = subtotalCents > 10000 ? 0 : 1500;
 			const totalCents = subtotalCents + taxCents + shippingCents;
 
-			const [order] = await trx`
-        INSERT INTO orders (
-          user_id,
-          status,
-          payment_status,
-          subtotal_cents,
-          tax_cents,
-          shipping_cents,
-          total_cents,
-          currency,
-          shipping_name,
-          shipping_address_line1,
-          shipping_address_line2,
-          shipping_city,
-          shipping_state,
-          shipping_postcode,
-          shipping_country
-        ) VALUES (
-          ${carts[0].user_id ?? null},
-          'pending',
-          'pending',
-          ${subtotalCents},
-          ${taxCents},
-          ${shippingCents},
-          ${totalCents},
-          'AUD',
-          ${shipping?.name ?? null},
-          ${shipping?.addressLine1 ?? null},
-          ${shipping?.addressLine2 ?? null},
-          ${shipping?.city ?? null},
-          ${shipping?.state ?? null},
-          ${shipping?.postcode ?? null},
-          ${shipping?.country ?? null}
-        )
-        RETURNING *
-      `;
+			let order = null;
+			for (let i = 0; i < 6; i += 1) {
+				try {
+					const publicOrderId = generatePublicOrderId();
+					const [created] = await trx`
+				INSERT INTO orders (
+					public_order_id,
+					user_id,
+					status,
+					payment_status,
+					subtotal_cents,
+					tax_cents,
+					shipping_cents,
+					total_cents,
+					currency,
+					shipping_name,
+					shipping_address_line1,
+					shipping_address_line2,
+					shipping_city,
+					shipping_state,
+					shipping_postcode,
+					shipping_country
+				) VALUES (
+					${publicOrderId},
+					${carts[0].user_id ?? null},
+					'pending',
+					'pending',
+					${subtotalCents},
+					${taxCents},
+					${shippingCents},
+					${totalCents},
+					'AUD',
+					${shipping?.name ?? null},
+					${shipping?.addressLine1 ?? null},
+					${shipping?.addressLine2 ?? null},
+					${shipping?.city ?? null},
+					${shipping?.state ?? null},
+					${shipping?.postcode ?? null},
+					${shipping?.country ?? null}
+				)
+				RETURNING *
+			`;
+					order = created;
+					break;
+				} catch (err) {
+					if (!isPublicOrderIdCollision(err)) throw err;
+				}
+			}
+			if (!order) {
+				throw new Error("Could not generate unique order ID");
+			}
 
 			for (const row of items) {
 				const lineTotal = row.price_cents * row.quantity;
@@ -398,7 +440,7 @@ checkoutRouter.post("/pay", async (c) => {
 				username: c.env.FATZEBRA_USERNAME,
 				token: c.env.FATZEBRA_TOKEN,
 				amount_cents: result.totalCents,
-				reference: `ORDER-${result.order.id}`,
+				reference: result.order.public_order_id ?? `ORDER-${result.order.id}`,
 				customer_ip: customerIp,
 				currency: "AUD",
 				card_token: cardToken,
@@ -435,7 +477,7 @@ checkoutRouter.post("/pay", async (c) => {
 			});
 
 			return Response.json({
-				orderId: result.order.id,
+				orderId: result.order.public_order_id,
 				status: "paid",
 			});
 		} catch (err) {
