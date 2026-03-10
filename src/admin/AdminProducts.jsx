@@ -53,6 +53,8 @@ function AdminProducts() {
 			setProducts((prev) =>
 				prev.map((p) => (p.id === productId ? { ...p, is_active: nextActive } : p)),
 			);
+			// If we just archived something, show archived items so it doesn't "disappear"
+			if (!nextActive) setShowInactive(true);
 		} catch (e) {
 			setError(e.message || "Failed to update product");
 		} finally {
