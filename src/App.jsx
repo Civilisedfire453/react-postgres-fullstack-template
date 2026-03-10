@@ -125,11 +125,11 @@ function App() {
 
 	return (
 		<div className="layout app-shell">
-			<header className="fixed top-0 right-0 left-[280px] h-14 bg-white/95 backdrop-blur border-b border-slate-200/80 z-20 flex items-center justify-between px-6 transition-all duration-300">
+			<header className="fixed top-0 right-0 left-0 md:left-[280px] h-14 bg-white/95 backdrop-blur border-b border-slate-200/80 z-20 flex items-center justify-between px-4 md:px-6 transition-all duration-300">
 				<Link to="/" className="font-serif text-lg font-semibold text-slate-800 hover:text-teal-600 transition-colors">
 					PureFlow
 				</Link>
-				<div className="flex items-center gap-5 text-sm">
+				<div className="flex items-center gap-3 sm:gap-5 text-sm">
 					<motion.button
 						type="button"
 						onClick={() => setCartDrawerOpen(true)}
@@ -147,7 +147,7 @@ function App() {
 					</motion.button>
 					<Link to="/admin/login" className="flex items-center gap-1.5 text-slate-500 hover:text-teal-600 transition-colors" aria-label="Admin">
 						<Settings2 className="w-5 h-5" strokeWidth={1.8} />
-						<span>Admin</span>
+						<span className="hidden sm:inline">Admin</span>
 					</Link>
 				</div>
 			</header>
@@ -162,12 +162,44 @@ function App() {
 			<AnimatePresence mode="wait">
 				<motion.main
 					key={location.pathname}
-					className="main-content pt-14"
+					className="main-content pt-16 md:pt-14"
 					initial={{ opacity: 0, y: 8, filter: "blur(2px)" }}
 					animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
 					exit={{ opacity: 0, y: -6, filter: "blur(2px)" }}
 					transition={{ duration: 0.25, ease: "easeOut" }}
 				>
+					{!productId && (
+						<div className="md:hidden -mx-1 mb-4 overflow-x-auto pb-1">
+							<div className="flex items-center gap-2 min-w-max px-1">
+								<button
+									type="button"
+									onClick={() => handleSelectCategory(null)}
+									className={
+										activeCategory === null
+											? "px-3 py-1.5 rounded-full text-sm bg-teal-100 text-teal-800 border border-teal-200"
+											: "px-3 py-1.5 rounded-full text-sm bg-white text-slate-600 border border-slate-200"
+									}
+								>
+									All
+								</button>
+								{categories.map((category) => (
+									<button
+										key={category.name}
+										type="button"
+										onClick={() => handleSelectCategory(category.name)}
+										className={
+											activeCategory === category.name
+												? "px-3 py-1.5 rounded-full text-sm bg-teal-100 text-teal-800 border border-teal-200"
+												: "px-3 py-1.5 rounded-full text-sm bg-white text-slate-600 border border-slate-200"
+										}
+									>
+										{category.name}
+									</button>
+								))}
+							</div>
+						</div>
+					)}
+
 					{!productId && (
 						<Breadcrumbs
 							items={[

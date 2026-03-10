@@ -94,6 +94,12 @@ p {
 	@apply fixed top-0 left-0 h-full w-[280px] bg-white/85 backdrop-blur-xl border-r border-slate-200/70 pt-10 pb-6 overflow-y-auto z-10 shadow-[0_10px_30px_-20px_rgb(2,6,23,0.25)];
 }
 
+@media (max-width: 767px) {
+	.sidebar {
+		display: none;
+	}
+}
+
 .sidebar-title {
 	@apply font-serif text-lg font-semibold px-6 mb-8 text-slate-800;
 }
@@ -120,6 +126,13 @@ p {
 
 .main-content {
 	@apply ml-[280px] flex-1 py-8 px-6 md:px-10 relative z-0;
+}
+
+@media (max-width: 767px) {
+	.main-content {
+		margin-left: 0;
+		padding: 1.25rem 1rem 2rem;
+	}
 }
 
 .page-header {
@@ -160,6 +173,12 @@ p {
 	@apply mt-5 mb-4 text-4xl md:text-5xl font-serif font-bold text-slate-900 leading-[1.05] tracking-tight;
 }
 
+@media (max-width: 640px) {
+	.hero-title {
+		font-size: 2rem;
+	}
+}
+
 .hero-title-accent {
 	@apply bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent;
 }
@@ -192,6 +211,12 @@ p {
 
 .product-card-image {
 	@apply h-56 overflow-hidden bg-slate-50;
+}
+
+@media (max-width: 640px) {
+	.product-card-image {
+		height: 11rem;
+	}
 }
 
 .product-card-image img {
@@ -240,6 +265,13 @@ p {
 /* Breadcrumbs */
 .breadcrumbs {
 	@apply flex items-center gap-2 mb-6 text-sm;
+}
+
+@media (max-width: 640px) {
+	.breadcrumbs {
+		flex-wrap: wrap;
+		row-gap: 0.35rem;
+	}
 }
 
 .breadcrumb-item {
