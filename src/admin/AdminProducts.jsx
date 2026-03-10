@@ -10,6 +10,7 @@ function AdminProducts() {
 	const [saving, setSaving] = useState(false);
 	const [formError, setFormError] = useState(null);
 	const [togglingId, setTogglingId] = useState(null);
+	const [showInactive, setShowInactive] = useState(false);
 
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
@@ -58,6 +59,10 @@ function AdminProducts() {
 			setTogglingId(null);
 		}
 	};
+
+	const visibleProducts = showInactive
+		? products
+		: (products ?? []).filter((p) => p.is_active);
 
 	useEffect(() => {
 		load();
@@ -165,7 +170,18 @@ function AdminProducts() {
 	return (
 		<div className="card">
 			<div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-				<h2>Products</h2>
+				<div className="space-y-1">
+					<h2>Products</h2>
+					<label className="inline-flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
+						<input
+							type="checkbox"
+							checked={showInactive}
+							onChange={(e) => setShowInactive(e.target.checked)}
+							className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
+						/>
+						<span>Show inactive (archived)</span>
+					</label>
+				</div>
 				<button
 					type="button"
 					onClick={openAdd}
@@ -189,7 +205,7 @@ function AdminProducts() {
 					</tr>
 				</thead>
 				<tbody>
-					{products.map((p) => (
+					{visibleProducts.map((p) => (
 						<tr key={p.id} className={!p.is_active ? "opacity-70" : ""}>
 							<td>{p.name}</td>
 							<td>{p.brand ?? "—"}</td>
@@ -204,14 +220,14 @@ function AdminProducts() {
 											? "bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
 											: "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
 									} ${togglingId === p.id ? "opacity-60 cursor-not-allowed" : ""}`}
-									title="Toggle active"
+									title={p.is_active ? "Archive product (hide from store)" : "Restore product (show in store)"}
 								>
 									<span
 										className={`h-2.5 w-2.5 rounded-full ${
 											p.is_active ? "bg-green-500" : "bg-slate-400"
 										}`}
 									/>
-									{p.is_active ? "Active" : "Inactive"}
+									{p.is_active ? "Active" : "Archived"}
 								</button>
 							</td>
 							<td>{p.variants?.length ?? 0}</td>

@@ -166,7 +166,11 @@ adminRouter.post("/products", async (c) => {
 adminRouter.put("/products/:id", async (c) => {
 	const id = c.req.param("id");
 	const body = await c.req.json();
-	const { name, description, brand, category, is_active } = body;
+	const name = body?.name ?? null;
+	const description = body?.description ?? null;
+	const brand = body?.brand ?? null;
+	const category = body?.category ?? null;
+	const is_active = body?.is_active ?? null;
 
 	const dbLogic = async (c) => {
 		const adminOrResponse = requireAdmin(c);
