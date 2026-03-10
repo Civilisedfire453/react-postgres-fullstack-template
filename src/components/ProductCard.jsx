@@ -14,8 +14,8 @@ function ProductCard({ product, onClick }) {
 	const isLowStock = hasStock && product.variants?.some((v) => v.stock_quantity > 0 && v.stock_quantity <= (v.reorder_threshold ?? 5));
 
 	return (
-		<div className="book-card cursor-pointer group hover-lift" onClick={onClick}>
-			<div className="book-card-image relative">
+		<div className="product-card cursor-pointer group hover-lift" onClick={onClick}>
+			<div className="product-card-image relative">
 				{!hasStock && (
 					<span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-800/90 text-white text-xs font-medium z-10">
 						Out of stock
@@ -38,7 +38,7 @@ function ProductCard({ product, onClick }) {
 					</div>
 				)}
 			</div>
-			<div className="book-card-content">
+			<div className="product-card-content">
 				{product.brand && (
 					<p className="text-teal-600 text-xs font-medium uppercase tracking-wide mb-1">{product.brand}</p>
 				)}

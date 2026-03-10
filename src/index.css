@@ -185,20 +185,20 @@ p {
 	@apply bg-white rounded-2xl border border-slate-200/80 p-6 md:p-8 shadow-sm transition-shadow hover:shadow-md;
 }
 
-.book-card {
+.product-card {
 	@apply bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm
     transition-all duration-300 hover:shadow-[0_18px_50px_-25px_rgb(2,6,23,0.35)] hover:border-teal-200 hover:-translate-y-0.5;
 }
 
-.book-card-image {
+.product-card-image {
 	@apply h-56 overflow-hidden bg-slate-50;
 }
 
-.book-card-image img {
+.product-card-image img {
 	@apply object-contain w-full h-full p-4;
 }
 
-.book-card-content {
+.product-card-content {
 	@apply p-5 space-y-3;
 }
 

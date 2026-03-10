@@ -96,15 +96,27 @@ function App() {
 		setCartCount(0);
 	};
 
-	const headerTitle = useMemo(() => {
-		if (activeCategory) return `${activeCategory} filters`;
-		return "Water filters";
+	const categoryMentionsFilters = useMemo(() => {
+		if (!activeCategory) return false;
+		return /\bfilters?\b\s*$/i.test(activeCategory.trim());
 	}, [activeCategory]);
 
+	const headerTitle = useMemo(() => {
+		if (activeCategory) {
+			return categoryMentionsFilters ? activeCategory : `${activeCategory} filters`;
+		}
+		return "Water filters";
+	}, [activeCategory, categoryMentionsFilters]);
+
 	const headerSubtitle = useMemo(() => {
-		if (activeCategory) return `Browse our ${activeCategory.toLowerCase()} water filters`;
+		if (activeCategory) {
+			const categoryText = activeCategory.toLowerCase();
+			return categoryMentionsFilters
+				? `Browse our ${categoryText}`
+				: `Browse our ${categoryText} water filters`;
+		}
 		return "Clean water for every home";
-	}, [activeCategory]);
+	}, [activeCategory, categoryMentionsFilters]);
 
 	const scrollToProducts = () => {
 		const el = document.getElementById("products");

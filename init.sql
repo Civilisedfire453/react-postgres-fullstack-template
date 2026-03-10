@@ -210,13 +210,26 @@ ON CONFLICT (sku) DO NOTHING;
 
 INSERT INTO product_images (product_id, image_url, is_primary)
 VALUES
-    (1, '/images/filters/pureflow-standard.jpg', TRUE),
-    (2, '/images/filters/aquamax-family.jpg', TRUE),
-    (3, '/images/filters/crystalstream-under-sink.jpg', TRUE),
-    (4, '/images/filters/hydroguard-whole-house.jpg', TRUE),
-    (5, '/images/filters/pureflow-cartridges.jpg', TRUE),
-    (6, '/images/filters/aquamax-ro.jpg', TRUE)
+    (1, '/images/filters/pureflow-standard.svg', TRUE),
+    (2, '/images/filters/aquamax-family.svg', TRUE),
+    (3, '/images/filters/generic.svg', TRUE),
+    (4, '/images/filters/hydroguard-whole-house.svg', TRUE),
+    (5, '/images/filters/generic.svg', TRUE),
+    (6, '/images/filters/generic.svg', TRUE)
 ON CONFLICT DO NOTHING;
+
+-- Keep seeded product image paths aligned with available public assets
+UPDATE product_images
+SET image_url = CASE product_id
+    WHEN 1 THEN '/images/filters/pureflow-standard.svg'
+    WHEN 2 THEN '/images/filters/aquamax-family.svg'
+    WHEN 3 THEN '/images/filters/generic.svg'
+    WHEN 4 THEN '/images/filters/hydroguard-whole-house.svg'
+    WHEN 5 THEN '/images/filters/generic.svg'
+    WHEN 6 THEN '/images/filters/generic.svg'
+    ELSE image_url
+END
+WHERE product_id IN (1, 2, 3, 4, 5, 6);
 
 -- Add customer contact columns to orders if they don't exist (for existing DBs)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);

@@ -1,6 +1,6 @@
 {
 	"name": "react-postgres-fullstack-template",
-	"description": "Deploy your own library of books using Postgres and Workers.",
+	"description": "Deploy a water filter e-commerce app using Postgres and Workers.",
 	"cloudflare": {
 		"label": "React + Postgres Fullstack App",
 		"products": [
