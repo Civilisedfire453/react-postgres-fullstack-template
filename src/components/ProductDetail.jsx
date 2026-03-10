@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import Breadcrumbs from "./Breadcrumbs.jsx";
+import { publicAssetUrl } from "../lib/publicAssetUrl.js";
 
 function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	const navigate = useNavigate();
@@ -51,10 +52,10 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	}
 
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
-	const fallbackImageUrl = `/images/filters/generic.svg?seed=${encodeURIComponent(
+	const fallbackImageUrl = `images/filters/generic.svg?seed=${encodeURIComponent(
 		String(product.id ?? product.name ?? "product"),
 	)}`;
-	const imageUrl = primaryImage?.image_url || fallbackImageUrl;
+	const imageUrl = publicAssetUrl(primaryImage?.image_url || fallbackImageUrl);
 	const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
 
 	const breadcrumbItems = [{ label: "All Filters", value: null }];
