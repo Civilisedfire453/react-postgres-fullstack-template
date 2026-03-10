@@ -18,6 +18,7 @@ function getMockProducts() {
 					id: 11,
 					sku: "PF-STD-3L",
 					name: "PureFlow 3L Compact Pitcher",
+					is_active: true,
 					capacity_liters: 3.0,
 					pack_size: 1,
 					price_cents: 4999,
@@ -28,6 +29,7 @@ function getMockProducts() {
 					id: 12,
 					sku: "PF-STD-5L",
 					name: "PureFlow 5L Family Pitcher",
+					is_active: true,
 					capacity_liters: 5.0,
 					pack_size: 1,
 					price_cents: 5999,
@@ -56,6 +58,7 @@ function getMockProducts() {
 					id: 21,
 					sku: "AM-CT-8L",
 					name: "AquaMax 8L Countertop Filter",
+					is_active: true,
 					capacity_liters: 8.0,
 					pack_size: 1,
 					price_cents: 11999,
@@ -66,6 +69,7 @@ function getMockProducts() {
 					id: 22,
 					sku: "AM-CT-12L",
 					name: "AquaMax 12L Countertop Filter",
+					is_active: true,
 					capacity_liters: 12.0,
 					pack_size: 1,
 					price_cents: 13999,
@@ -94,6 +98,7 @@ function getMockProducts() {
 					id: 31,
 					sku: "HG-WH-SED-CARB",
 					name: "HydroGuard Whole‑House Sediment + Carbon",
+					is_active: true,
 					capacity_liters: null,
 					pack_size: 1,
 					price_cents: 24999,
@@ -124,6 +129,10 @@ productsRouter.get("/", async (c) => {
 		let whereClauses = [];
 		// Public catalog: only show active products
 		whereClauses.push(sql`p.is_active = true`);
+		// Only show products that have at least one active variant
+		whereClauses.push(
+			sql`EXISTS (SELECT 1 FROM product_variants v2 WHERE v2.product_id = p.id AND v2.is_active = true)`,
+		);
 
 		if (category) {
 			whereClauses.push(sql`p.category = ${category}`);
@@ -175,7 +184,7 @@ productsRouter.get("/", async (c) => {
           '[]'
         ) AS images
       FROM products p
-      LEFT JOIN product_variants v ON v.product_id = p.id
+      LEFT JOIN product_variants v ON v.product_id = p.id AND v.is_active = true
       LEFT JOIN product_images i ON i.product_id = p.id
     `;
 
@@ -219,6 +228,13 @@ productsRouter.get("/", async (c) => {
 				p.variants?.some((v) => v.stock_quantity > 0),
 			);
 		}
+
+		products = products
+			.map((p) => ({
+				...p,
+				variants: (p.variants ?? []).filter((v) => v.is_active !== false),
+			}))
+			.filter((p) => (p.variants ?? []).length > 0);
 
 		return Response.json({ products, source: "mock" });
 	};
@@ -267,9 +283,11 @@ productsRouter.get("/:id", async (c) => {
           '[]'
         ) AS images
       FROM products p
-      LEFT JOIN product_variants v ON v.product_id = p.id
+      LEFT JOIN product_variants v ON v.product_id = p.id AND v.is_active = true
       LEFT JOIN product_images i ON i.product_id = p.id
-      WHERE p.id = ${id} AND p.is_active = true
+      WHERE p.id = ${id}
+        AND p.is_active = true
+        AND EXISTS (SELECT 1 FROM product_variants v2 WHERE v2.product_id = p.id AND v2.is_active = true)
       GROUP BY p.id
     `;
 
@@ -283,13 +301,24 @@ productsRouter.get("/:id", async (c) => {
 	const mockLogic = async () => {
 		const products = getMockProducts();
 		const productId = parseInt(id, 10);
-		const product = products.find((p) => p.id === productId && p.is_active);
+		const product = products.find(
+			(p) =>
+				p.id === productId &&
+				p.is_active &&
+				(p.variants ?? []).some((v) => v.is_active !== false),
+		);
 
 		if (!product) {
 			return Response.json({ error: "Product not found" }, { status: 404 });
 		}
 
-		return Response.json({ product, source: "mock" });
+		return Response.json({
+			product: {
+				...product,
+				variants: (product.variants ?? []).filter((v) => v.is_active !== false),
+			},
+			source: "mock",
+		});
 	};
 
 	return selectDataSource(c, dbLogic, mockLogic);

@@ -19,7 +19,11 @@
 }
 
 body {
-	@apply bg-slate-50 text-slate-800 font-sans leading-relaxed;
+	@apply bg-gradient-to-br from-slate-50 via-white to-teal-50 text-slate-800 font-sans leading-relaxed;
+}
+
+::selection {
+	background: rgb(20 184 166 / 0.25);
 }
 
 h1 {
@@ -66,11 +70,28 @@ p {
 
 /* Layout components */
 .layout {
-	@apply flex min-h-screen bg-slate-50;
+	@apply flex min-h-screen;
+}
+
+.app-shell {
+	position: relative;
+	isolation: isolate;
+}
+
+.app-shell::before {
+	content: "";
+	position: fixed;
+	inset: -40vh -30vw auto -30vw;
+	height: 70vh;
+	z-index: -1;
+	background:
+		radial-gradient(closest-side, rgb(20 184 166 / 0.16), transparent 70%),
+		radial-gradient(closest-side, rgb(56 189 248 / 0.12), transparent 70%);
+	filter: blur(10px);
 }
 
 .sidebar {
-	@apply fixed top-0 left-0 h-full w-[280px] bg-white border-r border-slate-200 pt-10 pb-6 overflow-y-auto z-10 shadow-sm;
+	@apply fixed top-0 left-0 h-full w-[280px] bg-white/85 backdrop-blur-xl border-r border-slate-200/70 pt-10 pb-6 overflow-y-auto z-10 shadow-[0_10px_30px_-20px_rgb(2,6,23,0.25)];
 }
 
 .sidebar-title {
@@ -82,11 +103,11 @@ p {
 }
 
 .sidebar-link {
-	@apply block px-3 py-2.5 text-slate-600 hover:bg-teal-50 hover:text-teal-800 rounded-xl transition-colors font-sans text-sm;
+	@apply block px-3 py-2.5 text-slate-600 hover:bg-teal-50/70 hover:text-teal-800 rounded-xl transition-colors font-sans text-sm;
 }
 
 .sidebar-link-active {
-	@apply block px-3 py-2.5 bg-teal-50 text-teal-700 font-medium rounded-xl font-sans text-sm;
+	@apply block px-3 py-2.5 bg-teal-50/80 text-teal-800 font-medium rounded-xl font-sans text-sm;
 }
 
 .sidebar-section {
@@ -112,7 +133,7 @@ p {
 
 .book-card {
 	@apply bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-sm
-    transition-all duration-300 hover:shadow-lg hover:border-teal-200 hover:-translate-y-0.5;
+    transition-all duration-300 hover:shadow-[0_18px_50px_-25px_rgb(2,6,23,0.35)] hover:border-teal-200 hover:-translate-y-0.5;
 }
 
 .book-card-image {
@@ -135,9 +156,9 @@ p {
 }
 
 .btn-primary {
-	@apply px-5 py-2.5 rounded-xl bg-teal-600 text-white border-0 
-  transition-colors hover:bg-teal-700 focus:outline-none focus:ring-2 
-  focus:ring-teal-500/50 font-sans font-medium shadow-sm;
+	@apply px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-600 to-emerald-600 text-white border-0
+  transition-all hover:brightness-[1.02] hover:shadow-[0_16px_45px_-25px_rgb(16,185,129,0.9)] focus:outline-none focus:ring-2
+  focus:ring-teal-500/45 font-sans font-medium shadow-sm;
 }
 
 .btn-subtle {

@@ -35,6 +35,7 @@ adminRouter.get("/products", async (c) => {
               'id', v.id,
               'sku', v.sku,
               'name', v.name,
+              'is_active', v.is_active,
               'capacity_liters', v.capacity_liters,
               'pack_size', v.pack_size,
               'price_cents', v.price_cents,
@@ -197,6 +198,49 @@ adminRouter.put("/products/:id", async (c) => {
 		}
 
 		return Response.json({ product: updated });
+	};
+
+	const mockLogic = async () => {
+		return Response.json(
+			{ error: "Admin API requires database connection" },
+			{ status: 503 },
+		);
+	};
+
+	return selectDataSource(c, dbLogic, mockLogic);
+});
+
+// PUT /api/admin/variants/:id - update variant fields (currently supports is_active)
+adminRouter.put("/variants/:id", async (c) => {
+	const id = c.req.param("id");
+	const body = await c.req.json().catch(() => ({}));
+	const is_active = body?.is_active ?? null;
+
+	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
+		const sql = c.env.SQL;
+
+		if (typeof is_active !== "boolean") {
+			return badRequest("is_active boolean is required");
+		}
+
+		const [updated] = await sql`
+      UPDATE product_variants
+      SET
+        is_active = ${is_active},
+        updated_at = CURRENT_TIMESTAMP
+      WHERE id = ${id}
+      RETURNING *
+    `;
+
+		if (!updated) {
+			return Response.json({ error: "Variant not found" }, { status: 404 });
+		}
+
+		return Response.json({ variant: updated });
 	};
 
 	const mockLogic = async () => {

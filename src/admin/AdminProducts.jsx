@@ -11,6 +11,8 @@ function AdminProducts() {
 	const [formError, setFormError] = useState(null);
 	const [togglingId, setTogglingId] = useState(null);
 	const [showInactive, setShowInactive] = useState(false);
+	const [variantPicker, setVariantPicker] = useState(null);
+	// variantPicker: { product, mode: 'archiveOne'|'archiveAll', selectedVariantId }
 
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
@@ -37,8 +39,8 @@ function AdminProducts() {
 		}
 	}, [authFetch]);
 
-	const toggleActive = async (productId, nextActive) => {
-		setTogglingId(productId);
+	const updateProductActive = async (productId, nextActive) => {
+		setTogglingId(`product:${productId}`);
 		setError(null);
 		try {
 			const res = await authFetch(`/api/admin/products/${productId}`, {
@@ -53,7 +55,6 @@ function AdminProducts() {
 			setProducts((prev) =>
 				prev.map((p) => (p.id === productId ? { ...p, is_active: nextActive } : p)),
 			);
-			// If we just archived something, show archived items so it doesn't "disappear"
 			if (!nextActive) setShowInactive(true);
 		} catch (e) {
 			setError(e.message || "Failed to update product");
@@ -62,9 +63,65 @@ function AdminProducts() {
 		}
 	};
 
+	const updateVariantActive = async (variantId, nextActive) => {
+		setTogglingId(`variant:${variantId}`);
+		setError(null);
+		try {
+			const res = await authFetch(`/api/admin/variants/${variantId}`, {
+				method: "PUT",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ is_active: nextActive }),
+			});
+			if (!res.ok) {
+				const data = await res.json().catch(() => ({}));
+				throw new Error(data.error || "Failed to update variant");
+			}
+			setProducts((prev) =>
+				prev.map((p) => ({
+					...p,
+					variants: (p.variants ?? []).map((v) =>
+						v.id === variantId ? { ...v, is_active: nextActive } : v,
+					),
+				})),
+			);
+			if (!nextActive) setShowInactive(true);
+		} catch (e) {
+			setError(e.message || "Failed to update variant");
+		} finally {
+			setTogglingId(null);
+		}
+	};
+
+	const onToggleProductRequested = (product, nextActive) => {
+		// Turning product ON/OFF always applies to the whole product.
+		if (nextActive) {
+			updateProductActive(product.id, true);
+			return;
+		}
+
+		// When archiving, if there are multiple variants, ask whether to archive one variant or the whole product.
+		const variants = product.variants ?? [];
+		if (variants.length > 1) {
+			const firstActive =
+				variants.find((v) => v.is_active !== false)?.id ?? variants[0]?.id ?? null;
+			setVariantPicker({
+				product,
+				mode: "archiveOne",
+				selectedVariantId: firstActive,
+			});
+			return;
+		}
+
+		// Single-variant product: archive product (and variant remains but product hidden in store).
+		updateProductActive(product.id, false);
+	};
+
+	const productHasActiveVariant = (p) =>
+		(p.variants ?? []).some((v) => v.is_active !== false);
+
 	const visibleProducts = showInactive
 		? products
-		: (products ?? []).filter((p) => p.is_active);
+		: (products ?? []).filter((p) => p.is_active && productHasActiveVariant(p));
 
 	useEffect(() => {
 		load();
@@ -202,27 +259,30 @@ function AdminProducts() {
 						<th>Name</th>
 						<th>Brand</th>
 						<th>Category</th>
-						<th>Active</th>
+						<th>Store</th>
 						<th>Variants</th>
 					</tr>
 				</thead>
 				<tbody>
 					{visibleProducts.map((p) => (
-						<tr key={p.id} className={!p.is_active ? "opacity-70" : ""}>
+						<tr
+							key={p.id}
+							className={!p.is_active || !productHasActiveVariant(p) ? "opacity-70" : ""}
+						>
 							<td>{p.name}</td>
 							<td>{p.brand ?? "—"}</td>
 							<td>{p.category ?? "—"}</td>
 							<td>
 								<button
 									type="button"
-									disabled={togglingId === p.id}
-									onClick={() => toggleActive(p.id, !p.is_active)}
+									disabled={togglingId === `product:${p.id}`}
+									onClick={() => onToggleProductRequested(p, !p.is_active)}
 									className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors ${
 										p.is_active
 											? "bg-green-50 border-green-200 text-green-800 hover:bg-green-100"
 											: "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
-									} ${togglingId === p.id ? "opacity-60 cursor-not-allowed" : ""}`}
-									title={p.is_active ? "Archive product (hide from store)" : "Restore product (show in store)"}
+									} ${togglingId === `product:${p.id}` ? "opacity-60 cursor-not-allowed" : ""}`}
+									title={p.is_active ? "Archive product (hide from store) or archive a single variant" : "Restore product (show in store)"}
 								>
 									<span
 										className={`h-2.5 w-2.5 rounded-full ${
@@ -232,11 +292,134 @@ function AdminProducts() {
 									{p.is_active ? "Active" : "Archived"}
 								</button>
 							</td>
-							<td>{p.variants?.length ?? 0}</td>
+							<td>
+								<div className="space-y-2">
+									<div className="text-xs text-slate-500">
+										{(p.variants ?? []).filter((v) => v.is_active !== false).length} active / {(p.variants ?? []).length} total
+									</div>
+									<div className="space-y-1">
+										{(showInactive ? (p.variants ?? []) : (p.variants ?? []).filter((v) => v.is_active !== false)).map((v) => (
+											<div key={v.id} className="flex items-center justify-between gap-3">
+												<div className="min-w-0">
+													<div className="text-sm text-slate-700 truncate">{v.name}</div>
+													<div className="text-xs text-slate-400 truncate">{v.sku}</div>
+												</div>
+												<button
+													type="button"
+													disabled={togglingId === `variant:${v.id}`}
+													onClick={() => updateVariantActive(v.id, !(v.is_active !== false))}
+													className={`shrink-0 inline-flex items-center gap-2 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+														v.is_active !== false
+															? "bg-teal-50 border-teal-200 text-teal-800 hover:bg-teal-100"
+															: "bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100"
+													} ${togglingId === `variant:${v.id}` ? "opacity-60 cursor-not-allowed" : ""}`}
+													title={v.is_active !== false ? "Archive variant (hide this option in store)" : "Restore variant (show this option in store)"}
+												>
+													<span className={`h-2 w-2 rounded-full ${v.is_active !== false ? "bg-teal-600" : "bg-slate-400"}`} />
+													{v.is_active !== false ? "Active" : "Archived"}
+												</button>
+											</div>
+										))}
+									</div>
+								</div>
+							</td>
 						</tr>
 					))}
 				</tbody>
 			</table>
+
+			{variantPicker && (
+				<div
+					className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+					onClick={() => togglingId == null && setVariantPicker(null)}
+				>
+					<div
+						className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<div className="p-5 border-b border-slate-200 flex items-center justify-between">
+							<div>
+								<h3 className="text-lg font-semibold text-slate-900">Archive options</h3>
+								<p className="text-sm text-slate-500">Choose whether to archive a specific variant or the whole product.</p>
+							</div>
+							<button
+								type="button"
+								onClick={() => setVariantPicker(null)}
+								className="p-2 rounded-lg text-slate-500 hover:bg-slate-100"
+								aria-label="Close"
+							>
+								<svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+								</svg>
+							</button>
+						</div>
+
+						<div className="p-5 space-y-4">
+							<div className="space-y-2">
+								<label className="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
+									<input
+										type="radio"
+										name="archiveMode"
+										checked={variantPicker.mode === "archiveOne"}
+										onChange={() => setVariantPicker((s) => ({ ...s, mode: "archiveOne" }))}
+										className="text-teal-600 focus:ring-teal-500"
+									/>
+									Archive one variant (recommended)
+								</label>
+								{variantPicker.mode === "archiveOne" && (
+									<select
+										value={variantPicker.selectedVariantId ?? ""}
+										onChange={(e) =>
+											setVariantPicker((s) => ({ ...s, selectedVariantId: parseInt(e.target.value, 10) }))
+										}
+										className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none"
+									>
+										{(variantPicker.product.variants ?? []).map((v) => (
+											<option key={v.id} value={v.id}>
+												{v.name} ({v.sku}){v.is_active !== false ? "" : " — already archived"}
+											</option>
+										))}
+									</select>
+								)}
+							</div>
+
+							<label className="inline-flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
+								<input
+									type="radio"
+									name="archiveMode"
+									checked={variantPicker.mode === "archiveAll"}
+									onChange={() => setVariantPicker((s) => ({ ...s, mode: "archiveAll" }))}
+									className="text-teal-600 focus:ring-teal-500"
+								/>
+								Archive entire product (all variants)
+							</label>
+
+							<div className="flex gap-3 pt-2">
+								<button type="button" className="btn flex-1" onClick={() => setVariantPicker(null)}>
+									Cancel
+								</button>
+								<button
+									type="button"
+									className="btn-primary flex-1"
+									disabled={togglingId != null}
+									onClick={async () => {
+										const product = variantPicker.product;
+										if (variantPicker.mode === "archiveAll") {
+											await updateProductActive(product.id, false);
+										} else {
+											const variantId = variantPicker.selectedVariantId;
+											if (variantId) await updateVariantActive(variantId, false);
+										}
+										setVariantPicker(null);
+									}}
+								>
+									Archive
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			)}
 
 			{addOpen && (
 				<div

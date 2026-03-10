@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+import { Grid2X2, Layers3 } from "lucide-react";
 
 function Sidebar({ genres, activeGenre, counts, title = "Filters" }) {
 	return (
@@ -12,11 +13,17 @@ function Sidebar({ genres, activeGenre, counts, title = "Filters" }) {
 						activeGenre === null ? "sidebar-link-active" : "sidebar-link"
 					}
 				>
-					All Filters
+					<span className="inline-flex items-center gap-2">
+						<Grid2X2 className="w-4 h-4" strokeWidth={1.8} />
+						All Filters
+					</span>
 				</Link>
 
 				<div className="sidebar-section">
-					<div className="sidebar-heading">Categories</div>
+					<div className="sidebar-heading inline-flex items-center gap-2">
+						<Layers3 className="w-3.5 h-3.5" strokeWidth={2} />
+						Categories
+					</div>
 						{genres.map((genre) => (
 						<Link
 							key={genre.name}

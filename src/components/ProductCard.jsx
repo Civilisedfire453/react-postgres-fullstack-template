@@ -1,3 +1,5 @@
+import { ArrowRight, ImageOff } from "lucide-react";
+
 function ProductCard({ product, onClick }) {
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
 	const minPriceCents = product.variants?.length
@@ -28,9 +30,7 @@ function ProductCard({ product, onClick }) {
 					/>
 				) : (
 					<div className="w-full h-full flex items-center justify-center text-slate-400">
-						<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
-						</svg>
+						<ImageOff className="w-14 h-14" strokeWidth={1.5} />
 					</div>
 				)}
 			</div>
@@ -48,10 +48,11 @@ function ProductCard({ product, onClick }) {
 					</div>
 				)}
 				<button
-					className="btn-primary w-full text-sm font-medium"
+					className="btn-primary w-full text-sm font-medium inline-flex items-center justify-center gap-2"
 					onClick={(e) => { e.preventDefault(); onClick?.(); }}
 				>
 					{hasStock ? "View details" : "Check back later"}
+					{hasStock && <ArrowRight className="w-4 h-4" strokeWidth={2} />}
 				</button>
 			</div>
 		</div>

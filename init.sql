@@ -42,6 +42,7 @@ CREATE TABLE IF NOT EXISTS product_variants (
     product_id INTEGER NOT NULL REFERENCES products(id) ON DELETE CASCADE,
     sku VARCHAR(100) UNIQUE NOT NULL,
     name VARCHAR(255) NOT NULL, -- e.g. "Standard 5L", "Family 10L"
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     capacity_liters NUMERIC(10,2),
     pack_size INTEGER DEFAULT 1,
     price_cents INTEGER NOT NULL,
@@ -220,3 +221,6 @@ ON CONFLICT DO NOTHING;
 -- Add customer contact columns to orders if they don't exist (for existing DBs)
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
 ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);
+
+-- Add is_active to variants for existing DBs
+ALTER TABLE product_variants ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT TRUE;
