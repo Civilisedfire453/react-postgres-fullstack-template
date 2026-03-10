@@ -51,6 +51,10 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	}
 
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
+	const fallbackImageUrl = `/images/filters/generic.svg?seed=${encodeURIComponent(
+		String(product.id ?? product.name ?? "product"),
+	)}`;
+	const imageUrl = primaryImage?.image_url || fallbackImageUrl;
 	const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
 
 	const breadcrumbItems = [{ label: "All Filters", value: null }];
@@ -127,9 +131,9 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 				<div className="card">
 					<div className="md:flex gap-10">
 						<div className="md:w-1/3 lg:w-1/4 flex-shrink-0 mb-8 md:mb-0">
-							{primaryImage ? (
+							{imageUrl ? (
 								<img
-									src={primaryImage.image_url}
+									src={imageUrl}
 									alt={product.name}
 									className="w-full h-full object-contain rounded-md border border-gray-200"
 								/>

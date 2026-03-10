@@ -126,6 +126,60 @@ p {
 	@apply mb-12;
 }
 
+/* Landing hero */
+.hero {
+	@apply mb-10 md:mb-14 rounded-[28px] border border-slate-200/70 overflow-hidden relative;
+	background:
+		radial-gradient(900px 360px at 20% 20%, rgb(20 184 166 / 0.22), transparent 55%),
+		radial-gradient(820px 320px at 85% 30%, rgb(56 189 248 / 0.18), transparent 55%),
+		linear-gradient(to bottom right, rgb(255 255 255 / 0.82), rgb(255 255 255 / 0.62));
+	backdrop-filter: blur(10px);
+}
+
+.hero::after {
+	content: "";
+	position: absolute;
+	inset: 0;
+	background:
+		radial-gradient(1px 1px at 20% 35%, rgb(15 23 42 / 0.25), transparent 60%),
+		radial-gradient(1px 1px at 75% 45%, rgb(15 23 42 / 0.22), transparent 60%),
+		radial-gradient(1px 1px at 40% 70%, rgb(15 23 42 / 0.18), transparent 60%);
+	opacity: 0.25;
+	pointer-events: none;
+}
+
+.hero-inner {
+	@apply relative z-10 px-6 py-10 md:px-10 md:py-14 max-w-3xl;
+}
+
+.hero-eyebrow {
+	@apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-teal-700 bg-white/70 border border-teal-200/60 rounded-full px-3 py-1.5;
+}
+
+.hero-title {
+	@apply mt-5 mb-4 text-4xl md:text-5xl font-serif font-bold text-slate-900 leading-[1.05] tracking-tight;
+}
+
+.hero-title-accent {
+	@apply bg-gradient-to-r from-teal-600 to-emerald-600 bg-clip-text text-transparent;
+}
+
+.hero-subtitle {
+	@apply text-lg md:text-xl text-slate-600 leading-relaxed mb-6;
+}
+
+.hero-actions {
+	@apply flex flex-col sm:flex-row gap-3 items-stretch sm:items-center mb-8;
+}
+
+.hero-badges {
+	@apply flex flex-wrap gap-2.5;
+}
+
+.hero-badge {
+	@apply inline-flex items-center gap-2 text-sm text-slate-700 bg-white/70 border border-slate-200/70 rounded-full px-3 py-2;
+}
+
 /* Card components */
 .card {
 	@apply bg-white rounded-2xl border border-slate-200/80 p-6 md:p-8 shadow-sm transition-shadow hover:shadow-md;

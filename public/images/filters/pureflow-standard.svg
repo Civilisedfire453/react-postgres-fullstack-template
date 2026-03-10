@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="160" y1="120" x2="1060" y2="720" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ECFEFF"/>
+      <stop offset="0.6" stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#ECFDF5"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(360 250) rotate(35) scale(620 360)">
+      <stop stop-color="#14B8A6" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#14B8A6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="pitcher" x1="470" y1="220" x2="760" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.92"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="water" x1="520" y1="430" x2="700" y2="650" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#38BDF8" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#14B8A6" stop-opacity="0.90"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1200" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="800" rx="56" fill="url(#bg)"/>
+  <rect width="1200" height="800" rx="56" fill="url(#glow)"/>
+
+  <g filter="url(#shadow)">
+    <!-- handle -->
+    <path d="M790 310c60 0 98 46 98 104 0 58-38 104-98 104h-18c-14 0-26-12-26-26v-20c0-14 12-26 26-26h14c30 0 52-26 52-58s-22-58-52-58h-14c-14 0-26-12-26-26v-12c0-14 12-26 26-26h18z" fill="#FFFFFF" fill-opacity="0.7" stroke="#E2E8F0" stroke-width="2"/>
+
+    <!-- pitcher body -->
+    <path d="M500 260c0-38 31-70 70-70h120c39 0 70 32 70 70v26c0 18 8 36 20 49l14 15c18 19 28 44 28 70v206c0 52-42 94-94 94H566c-52 0-94-42-94-94V420c0-26 10-51 28-70l14-15c12-13 20-31 20-49v-26z" fill="url(#pitcher)" stroke="#E2E8F0" stroke-width="2"/>
+
+    <!-- top rim -->
+    <path d="M500 300h260" stroke="#CBD5E1" stroke-width="2" opacity="0.8"/>
+
+    <!-- water fill -->
+    <path d="M520 452c0-20 16-36 36-36h148c20 0 36 16 36 36v170c0 26-21 48-48 48H568c-26 0-48-22-48-48V452z" fill="url(#water)" opacity="0.88"/>
+    <path d="M520 520c72 24 164 24 220-8" stroke="#FFFFFF" stroke-opacity="0.35" stroke-width="3"/>
+    <path d="M520 586c70 22 162 22 220-8" stroke="#FFFFFF" stroke-opacity="0.28" stroke-width="3"/>
+
+    <!-- label -->
+    <rect x="560" y="330" width="140" height="54" rx="16" fill="#FFFFFF" fill-opacity="0.72" stroke="#E2E8F0"/>
+    <text x="590" y="364" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="16" fill="#0F172A" font-weight="700">PureFlow</text>
+  </g>
+
+  <g opacity="0.92">
+    <rect x="120" y="610" width="420" height="84" rx="20" fill="#FFFFFF" fill-opacity="0.72" stroke="#E2E8F0"/>
+    <text x="150" y="662" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="22" fill="#0F172A" font-weight="650">
+      Standard Pitcher
+    </text>
+    <text x="150" y="690" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="16" fill="#475569">
+      Slim everyday pitcher filter
+    </text>
+  </g>
+</svg>

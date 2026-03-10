@@ -1,7 +1,11 @@
-import { ArrowRight, ImageOff } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 function ProductCard({ product, onClick }) {
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
+	const fallbackImageUrl = `/images/filters/generic.svg?seed=${encodeURIComponent(
+		String(product.id ?? product.name ?? "product"),
+	)}`;
+	const imageUrl = primaryImage?.image_url || fallbackImageUrl;
 	const minPriceCents = product.variants?.length
 		? Math.min(...product.variants.map((v) => v.price_cents))
 		: null;
@@ -22,9 +26,9 @@ function ProductCard({ product, onClick }) {
 						Only {totalStock} left
 					</span>
 				)}
-				{primaryImage ? (
+				{imageUrl ? (
 					<img
-						src={primaryImage.image_url}
+						src={imageUrl}
 						alt={product.name}
 						className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
 					/>

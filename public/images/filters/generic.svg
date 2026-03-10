@@ -1,0 +1,66 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="800" viewBox="0 0 1200 800" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="120" y1="80" x2="1080" y2="740" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ECFEFF"/>
+      <stop offset="0.55" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#ECFDF5"/>
+    </linearGradient>
+    <radialGradient id="glow1" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(320 250) rotate(45) scale(520 340)">
+      <stop stop-color="#14B8A6" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#14B8A6" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(860 290) rotate(30) scale(560 360)">
+      <stop stop-color="#38BDF8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="470" y1="210" x2="730" y2="620" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0.55"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="560" y1="320" x2="700" y2="560" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14B8A6"/>
+      <stop offset="1" stop-color="#10B981"/>
+    </linearGradient>
+    <filter id="shadow" x="0" y="0" width="1200" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="22" flood-color="#0F172A" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="800" rx="56" fill="url(#bg)"/>
+  <rect x="0" y="0" width="1200" height="800" rx="56" fill="url(#glow1)"/>
+  <rect x="0" y="0" width="1200" height="800" rx="56" fill="url(#glow2)"/>
+
+  <!-- subtle dots -->
+  <g opacity="0.25" fill="#0F172A">
+    <circle cx="230" cy="190" r="2"/>
+    <circle cx="285" cy="240" r="1.5"/>
+    <circle cx="340" cy="200" r="1.8"/>
+    <circle cx="910" cy="220" r="2"/>
+    <circle cx="980" cy="260" r="1.6"/>
+    <circle cx="920" cy="320" r="1.8"/>
+    <circle cx="260" cy="590" r="1.7"/>
+    <circle cx="325" cy="560" r="1.5"/>
+    <circle cx="980" cy="610" r="1.6"/>
+  </g>
+
+  <!-- product silhouette -->
+  <g filter="url(#shadow)">
+    <path d="M520 250c0-33 27-60 60-60h40c33 0 60 27 60 60v18c0 15 6 30 17 41l12 12c15 15 24 36 24 58v196c0 44-36 80-80 80H535c-44 0-80-36-80-80V379c0-22 9-43 24-58l12-12c11-11 17-26 17-41v-18z" fill="url(#glass)" stroke="#E2E8F0" stroke-width="2"/>
+    <path d="M520 312h160" stroke="#CBD5E1" stroke-width="2" opacity="0.75"/>
+    <path d="M560 356c0-10 8-18 18-18h44c10 0 18 8 18 18v20c0 10-8 18-18 18h-44c-10 0-18-8-18-18v-20z" fill="#FFFFFF" opacity="0.7" stroke="#E2E8F0"/>
+    <path d="M560 510c0-14 12-26 26-26h64c14 0 26 12 26 26v36c0 14-12 26-26 26h-64c-14 0-26-12-26-26v-36z" fill="url(#accent)" opacity="0.9"/>
+    <path d="M600 462c46-30 68-72 68-120" stroke="#14B8A6" stroke-width="4" opacity="0.22"/>
+    <path d="M582 458c30-22 46-52 46-86" stroke="#38BDF8" stroke-width="4" opacity="0.18"/>
+  </g>
+
+  <!-- label -->
+  <g opacity="0.92">
+    <rect x="120" y="610" width="340" height="84" rx="20" fill="#FFFFFF" fill-opacity="0.72" stroke="#E2E8F0"/>
+    <text x="150" y="662" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="22" fill="#0F172A" font-weight="650">
+      Water filter
+    </text>
+    <text x="150" y="690" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto" font-size="16" fill="#475569">
+      Image coming soon
+    </text>
+  </g>
+</svg>

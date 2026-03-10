@@ -323,7 +323,18 @@ adminRouter.get("/inventory", async (c) => {
 
 		let query = sql`
       SELECT
-        v.*,
+        v.id,
+        v.product_id,
+        v.sku,
+        v.name,
+        v.is_active,
+        v.capacity_liters,
+        v.pack_size,
+        v.price_cents,
+        v.stock_quantity,
+        v.reorder_threshold,
+        v.created_at,
+        v.updated_at,
         p.name AS product_name,
         p.brand,
         p.category,

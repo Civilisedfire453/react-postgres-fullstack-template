@@ -1,7 +1,7 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router";
 import { AnimatePresence, motion } from "framer-motion";
-import { Settings2, ShoppingBag } from "lucide-react";
+import { Droplets, ShieldCheck, Sparkles, Truck, Settings2, ShoppingBag } from "lucide-react";
 import Breadcrumbs from "./components/Breadcrumbs.jsx";
 import Sidebar from "./components/Sidebar.jsx";
 import ProductList from "./components/ProductList.jsx";
@@ -32,6 +32,7 @@ function App() {
 	const { productId } = params;
 	const { categoryId } = params;
 	const activeCategory = categoryId ? decodeURIComponent(categoryId) : null;
+	const isHome = !activeCategory && !productId;
 
 	useEffect(() => {
 		if (!cartId) {
@@ -95,10 +96,20 @@ function App() {
 		setCartCount(0);
 	};
 
-	const headerTitle = activeCategory ? `${activeCategory} filters` : "Water filters";
-	const headerSubtitle = activeCategory
-		? `Browse our ${activeCategory.toLowerCase()} water filters`
-		: "Clean water for every home";
+	const headerTitle = useMemo(() => {
+		if (activeCategory) return `${activeCategory} filters`;
+		return "Water filters";
+	}, [activeCategory]);
+
+	const headerSubtitle = useMemo(() => {
+		if (activeCategory) return `Browse our ${activeCategory.toLowerCase()} water filters`;
+		return "Clean water for every home";
+	}, [activeCategory]);
+
+	const scrollToProducts = () => {
+		const el = document.getElementById("products");
+		el?.scrollIntoView({ behavior: "smooth", block: "start" });
+	};
 
 	return (
 		<div className="layout app-shell">
@@ -161,10 +172,58 @@ function App() {
 						/>
 					)}
 
-					<div className="page-header">
-						<h1>{headerTitle}</h1>
-						<p className="text-slate-600 text-lg">{headerSubtitle}</p>
-					</div>
+					{isHome ? (
+						<section className="hero">
+							<div className="hero-inner">
+								<div className="hero-eyebrow">
+									<Sparkles className="w-4 h-4" strokeWidth={2} />
+									<span>PureFlow water filters</span>
+								</div>
+								<h1 className="hero-title">
+									Clean, great‑tasting water
+									<br />
+									<span className="hero-title-accent">in minutes</span>
+								</h1>
+								<p className="hero-subtitle">
+									Shop countertop, under‑sink, and whole‑home filters—built for
+									clarity, performance, and peace of mind.
+								</p>
+
+								<div className="hero-actions">
+									<button type="button" className="btn-primary" onClick={scrollToProducts}>
+										Shop filters
+									</button>
+									<button
+										type="button"
+										className="btn"
+										onClick={() => setCartDrawerOpen(true)}
+									>
+										Open cart
+									</button>
+								</div>
+
+								<div className="hero-badges">
+									<div className="hero-badge">
+										<ShieldCheck className="w-4 h-4" strokeWidth={2} />
+										<span>Quality‑checked</span>
+									</div>
+									<div className="hero-badge">
+										<Truck className="w-4 h-4" strokeWidth={2} />
+										<span>Fast dispatch</span>
+									</div>
+									<div className="hero-badge">
+										<Droplets className="w-4 h-4" strokeWidth={2} />
+										<span>Better taste</span>
+									</div>
+								</div>
+							</div>
+						</section>
+					) : (
+						<div className="page-header">
+							<h1>{headerTitle}</h1>
+							<p className="text-slate-600 text-lg">{headerSubtitle}</p>
+						</div>
+					)}
 
 					{productId ? (
 						<ProductDetail
@@ -174,7 +233,9 @@ function App() {
 							onCartUpdated={handleCartUpdated}
 						/>
 					) : (
-						<ProductList activeCategory={activeCategory} />
+						<div id="products" className="scroll-mt-24">
+							<ProductList activeCategory={activeCategory} />
+						</div>
 					)}
 				</motion.main>
 			</AnimatePresence>
