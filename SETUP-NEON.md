@@ -22,7 +22,12 @@ Copy the **Hyperdrive ID** that is printed (e.g. `a1b2c3d4e5f6...`).
 ## 3. Update `wrangler.jsonc`
 
 - Replace `YOUR_HYPERDRIVE_ID` with the ID from step 2.
-- Replace the `localConnectionString` value with your **same Neon connection string** (so local dev uses Neon).
+
+For local development, set this env var before running Wrangler (or store it in `.dev.vars`):
+
+```powershell
+$env:CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE="postgres://USER:PASSWORD@HOST/DBNAME?sslmode=require"
+```
 
 ## 4. Seed the database
 

@@ -78,11 +78,16 @@ Cloudflare's Hyperdrive is database connector that optimizes queries from your W
    "hyperdrive": [
      {
        "binding": "HYPERDRIVE",  // Name used to access the binding in your code
-       "id": "YOUR_HYPERDRIVE_ID",  // ID from the create command
-       "localConnectionString": "postgresql://myuser:mypassword@localhost:5432/mydatabase"  // Local dev connection
+          "id": "YOUR_HYPERDRIVE_ID"  // ID from the create command
      }
    ]
    ```
+
+    For local development, set this before running Wrangler:
+
+    ```powershell
+    $env:CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE="postgresql://myuser:mypassword@localhost:5432/mydatabase"
+    ```
 
 3. **Access in your code**:
 
@@ -131,12 +136,16 @@ There are two different ways to deploy this application: Full Experience and Dem
    "hyperdrive": [
      {
        "binding": "HYPERDRIVE",
-       "id": "YOUR_HYPERDRIVE_ID",
-       "localConnectionString": "postgresql://myuser:mypassword@localhost:5432/mydatabase"
+          "id": "YOUR_HYPERDRIVE_ID"
      }
    ]
    ```
-6. Deploy with `npm run deploy`
+6. Set local Hyperdrive connection string for dev (or put it in `.dev.vars`):
+
+    ```powershell
+    $env:CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE="postgresql://myuser:mypassword@localhost:5432/mydatabase"
+    ```
+7. Deploy with `npm run deploy`
 
 ### Required environment variables / secrets
 

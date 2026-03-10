@@ -1,0 +1,10 @@
+# Copy this file to .dev.vars and fill real values.
+# .dev.vars is gitignored, so secrets stay local.
+
+# Required for local Hyperdrive emulation in wrangler dev.
+CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE="postgresql://myuser:mypassword@localhost:5432/mydatabase"
+
+# Worker runtime secrets used by this app.
+JWT_SECRET="replace-with-long-random-string"
+FATZEBRA_USERNAME="replace-me"
+FATZEBRA_TOKEN="replace-me"

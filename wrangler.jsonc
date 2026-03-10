@@ -20,12 +20,15 @@
 	},
 	// Hyperdrive: use your Neon DB. Run once:
 	// npx wrangler hyperdrive create my-waterfilters-db --connection-string="YOUR_NEON_CONNECTION_STRING"
-	// Then paste the returned id below and set localConnectionString to the same Neon URL for local dev.
+	// Then paste the returned id below.
+	// For local dev, do NOT commit DB credentials here.
+	// Set this env var before running wrangler dev:
+	// CLOUDFLARE_HYPERDRIVE_LOCAL_CONNECTION_STRING_HYPERDRIVE
 	"hyperdrive": [
 		{
 			"binding": "HYPERDRIVE",
-			"id": "7a6652dbbb084b1d86ca650a2afb028b",
-			"localConnectionString": "postgresql://neondb_owner:npg_HnDu5TAvlw6U@ep-quiet-tree-a7rwmhmp-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+			"id": "7a6652dbbb084b1d86ca650a2afb028b"
+				
 		}
 	],
 	"placement": {
