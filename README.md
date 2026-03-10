@@ -1,4 +1,4 @@
-# React + Vite + PostgreSQL + Hyperdrive on Cloudflare Workers
+# Water Filter Store – React + PostgreSQL + Hyperdrive on Cloudflare Workers
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/cloudflare/templates/tree/main/react-postgres-fullstack-template)
 
@@ -6,15 +6,9 @@
 
 <!-- dash-content-start -->
 
-Build a library of books using [Cloudflare Workers Assets](https://developers.cloudflare.com/workers/static-assets/), Hono API routes, and [Cloudflare Hyperdrive](https://developers.cloudflare.com/hyperdrive/) to connect to a PostgreSQL database. [Workers Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement/) is enabled to automatically position your Worker closer to your database for reduced latency.
+Build a water filter e‑commerce site using [Cloudflare Workers Assets](https://developers.cloudflare.com/workers/static-assets/), Hono API routes, and [Cloudflare Hyperdrive](https://developers.cloudflare.com/hyperdrive/) to connect to a PostgreSQL database. [Workers Smart Placement](https://developers.cloudflare.com/workers/configuration/smart-placement/) is enabled to automatically position your Worker closer to your database for reduced latency.
 
-Browse a categorized collection of books in this application. To learn more about a title, click on it to navigate to an expanded view. The collection can also be filtered by genre. If a custom database connection is not provided, a fallback set of books will be used.
-
-If creating a personal database, books are expected to be stored in the following format:
-
-```sql
-(INDEX, 'BOOK_TITLE', 'BOOK_AUTHOR', 'BOOK_DESCRIPTION', '/images/books/BOOK_COVER_IMAGE.jpg', 'BOOK_GENRE')
-```
+Browse a catalog of water filters with variants (capacities, pack sizes) and real inventory tracking backed by PostgreSQL. Customers can view products, see stock levels, add items to a cart, and check out via Fat Zebra payments. Admin users can log in to manage products, low‑stock inventory, and orders from an admin dashboard.
 
 ## Features
 
@@ -44,12 +38,17 @@ This application uses Cloudflare Workers' [Smart Placement](https://developers.c
   - React SPA mode enabled in `wrangler.jsonc` for client-side navigation
 
 - **Backend**: API routes served by a Worker using [Hono](https://hono.dev/)
-  - API endpoints defined in `/api/routes` directory
-  - Automatic fallback to mock data when database is unavailable
+  - Catalog: `/api/products`
+  - Cart & checkout: `/api/cart`, `/api/checkout/*`
+  - Orders: `/api/orders`
+  - Auth: `/api/auth/*` (JWT-based)
+  - Admin: `/api/admin/*` (role-based access)
 
 - **Database**: PostgreSQL database connected via Cloudflare Hyperdrive
   - Smart Placement enabled for optimal performance
   - Handles missing connection strings or connection failures
+
+- **Payments**: Fat Zebra REST API (sandbox or live, configured as Worker secrets)
 
 ## Get Started
 
@@ -138,6 +137,16 @@ There are two different ways to deploy this application: Full Experience and Dem
    ]
    ```
 6. Deploy with `npm run deploy`
+
+### Required environment variables / secrets
+
+In addition to the Hyperdrive binding, configure these in your Cloudflare Worker environment (Dashboard → Workers & Pages → your project → Settings → Variables and Secrets):
+
+- `JWT_SECRET` (Secret): Secret key used to sign and verify JWTs for `/api/auth/*`.
+- `FATZEBRA_USERNAME` (Secret): Fat Zebra API username.
+- `FATZEBRA_TOKEN` (Secret): Fat Zebra API token.
+
+These are read in the Worker via `c.env.JWT_SECRET`, `c.env.FATZEBRA_USERNAME`, and `c.env.FATZEBRA_TOKEN`.
 
 ### Option 2: Without Database (Demo Mode)
 

@@ -6,6 +6,7 @@ import checkoutRouter from "./routes/checkout.js";
 import ordersRouter from "./routes/orders.js";
 import adminRouter from "./routes/admin.js";
 import authRouter from "./routes/auth.js";
+import { attachUserFromAuthHeader } from "./lib/auth.js";
 
 const app = new Hono();
 
@@ -35,6 +36,9 @@ app.use("*", async (c, next) => {
 		await next();
 	}
 });
+
+// Attach authenticated user (if any) from Authorization header
+app.use("/api/*", attachUserFromAuthHeader());
 
 // Public catalog
 app.route("/api/products", productsRouter);

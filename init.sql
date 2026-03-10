@@ -153,8 +153,12 @@ ON CONFLICT (email) DO NOTHING;
 -- Seed example water filter products and variants
 INSERT INTO products (id, name, description, brand, category, is_active)
 VALUES
-    (1, 'PureFlow Standard Filter', 'Everyday water filter for small households.', 'PureFlow', 'Pitcher Filters', TRUE),
-    (2, 'AquaMax Family Filter', 'High-capacity water filter for families.', 'AquaMax', 'Countertop Filters', TRUE)
+    (1, 'PureFlow Standard Pitcher', 'Slim, everyday water filter pitcher ideal for apartments and small households.', 'PureFlow', 'Pitcher Filters', TRUE),
+    (2, 'AquaMax Family Countertop', 'High‑capacity countertop filter designed for busy family kitchens.', 'AquaMax', 'Countertop Filters', TRUE),
+    (3, 'CrystalStream Under‑Sink System', 'Under‑sink filtration system that delivers crisp, filtered water straight from a dedicated tap.', 'CrystalStream', 'Under‑Sink Systems', TRUE),
+    (4, 'HydroGuard Whole‑House Filter', 'Whole‑house sediment and carbon filtration to protect every tap in your home.', 'HydroGuard', 'Whole‑House Systems', TRUE),
+    (5, 'PureFlow Replacement Cartridges', 'Long‑life replacement cartridges compatible with all PureFlow pitchers.', 'PureFlow', 'Replacement Cartridges', TRUE),
+    (6, 'AquaMax RO System', 'Reverse‑osmosis system with remineralisation for premium drinking water quality.', 'AquaMax', 'Reverse Osmosis', TRUE)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO product_variants (
@@ -168,14 +172,38 @@ INSERT INTO product_variants (
     reorder_threshold
 )
 VALUES
-    (1, 'PF-STD-5L', 'PureFlow 5L Pitcher', 5.0, 1, 5999, 25, 5),
-    (1, 'PF-STD-5L-3PK', 'PureFlow 5L Replacement Cartridges (3-pack)', 0, 3, 3999, 50, 10),
-    (2, 'AM-FAM-10L', 'AquaMax 10L Countertop Filter', 10.0, 1, 12999, 15, 3),
-    (2, 'AM-FAM-10L-CART', 'AquaMax 10L Replacement Cartridge', 0, 1, 2999, 40, 8)
+    -- PureFlow pitchers
+    (1, 'PF-STD-3L', 'PureFlow 3L Compact Pitcher', 3.0, 1, 4999, 40, 10),
+    (1, 'PF-STD-5L', 'PureFlow 5L Family Pitcher', 5.0, 1, 5999, 25, 5),
+    (1, 'PF-STD-7L', 'PureFlow 7L Entertainer Pitcher', 7.0, 1, 7999, 12, 4),
+
+    -- AquaMax countertop
+    (2, 'AM-CT-8L', 'AquaMax 8L Countertop Filter', 8.0, 1, 11999, 18, 5),
+    (2, 'AM-CT-12L', 'AquaMax 12L Countertop Filter', 12.0, 1, 13999, 10, 3),
+
+    -- CrystalStream under‑sink
+    (3, 'CS-US-2STG', 'CrystalStream 2‑Stage Under‑Sink System', 0, 1, 15999, 9, 3),
+    (3, 'CS-US-3STG', 'CrystalStream 3‑Stage Under‑Sink System', 0, 1, 18999, 7, 2),
+
+    -- HydroGuard whole‑house
+    (4, 'HG-WH-SED-CARB', 'HydroGuard Whole‑House Sediment + Carbon', 0, 1, 24999, 6, 2),
+    (4, 'HG-WH-TRIPLE', 'HydroGuard Triple‑Stage Whole‑House', 0, 1, 29999, 4, 2),
+
+    -- Replacement cartridges
+    (5, 'PF-CART-2PK', 'PureFlow Pitcher Cartridges (2‑pack)', 0, 2, 3499, 80, 15),
+    (5, 'PF-CART-4PK', 'PureFlow Pitcher Cartridges (4‑pack)', 0, 4, 5999, 60, 12),
+
+    -- AquaMax RO
+    (6, 'AM-RO-4STG', 'AquaMax 4‑Stage RO System', 0, 1, 32999, 5, 2),
+    (6, 'AM-RO-4STG-CART', 'AquaMax RO Replacement Cartridge Set', 0, 1, 8999, 20, 5)
 ON CONFLICT (sku) DO NOTHING;
 
 INSERT INTO product_images (product_id, image_url, is_primary)
 VALUES
     (1, '/images/filters/pureflow-standard.jpg', TRUE),
-    (2, '/images/filters/aquamax-family.jpg', TRUE)
+    (2, '/images/filters/aquamax-family.jpg', TRUE),
+    (3, '/images/filters/crystalstream-under-sink.jpg', TRUE),
+    (4, '/images/filters/hydroguard-whole-house.jpg', TRUE),
+    (5, '/images/filters/pureflow-cartridges.jpg', TRUE),
+    (6, '/images/filters/aquamax-ro.jpg', TRUE)
 ON CONFLICT DO NOTHING;

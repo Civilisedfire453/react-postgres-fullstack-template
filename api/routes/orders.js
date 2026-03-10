@@ -1,12 +1,23 @@
 import { Hono } from "hono";
 import { selectDataSource } from "../lib/utils.js";
+import { requireUser } from "../lib/auth.js";
 
 const ordersRouter = new Hono();
 
-// GET /api/orders - list all orders (auth to be enforced later)
+// GET /api/orders - list current user's orders (admin sees all)
 ordersRouter.get("/", async (c) => {
 	const dbLogic = async (c) => {
 		const sql = c.env.SQL;
+		const userOrResponse = requireUser(c);
+		if (userOrResponse instanceof Response) {
+			return userOrResponse;
+		}
+		const user = userOrResponse;
+
+		const whereClause =
+			user.role === "admin"
+				? sql``
+				: sql`WHERE o.user_id = ${user.id}`;
 
 		const orders = await sql`
       SELECT
@@ -25,6 +36,7 @@ ordersRouter.get("/", async (c) => {
         ) AS items
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
+      ${whereClause}
       GROUP BY o.id
       ORDER BY o.created_at DESC
     `;
@@ -48,6 +60,11 @@ ordersRouter.get("/:id", async (c) => {
 
 	const dbLogic = async (c) => {
 		const sql = c.env.SQL;
+		const userOrResponse = requireUser(c);
+		if (userOrResponse instanceof Response) {
+			return userOrResponse;
+		}
+		const user = userOrResponse;
 
 		const rows = await sql`
       SELECT
@@ -74,7 +91,12 @@ ordersRouter.get("/:id", async (c) => {
 			return Response.json({ error: "Order not found" }, { status: 404 });
 		}
 
-		return Response.json({ order: rows[0] });
+		const order = rows[0];
+		if (user.role !== "admin" && order.user_id !== user.id) {
+			return Response.json({ error: "Forbidden" }, { status: 403 });
+		}
+
+		return Response.json({ order });
 	};
 
 	const mockLogic = async () => {

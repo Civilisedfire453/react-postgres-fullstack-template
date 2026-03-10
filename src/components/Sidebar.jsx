@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 
-function Sidebar({ genres, activeGenre, counts }) {
+function Sidebar({ genres, activeGenre, counts, title = "Filters" }) {
 	return (
 		<aside className="sidebar">
-			<div className="sidebar-title">Library</div>
+			<div className="sidebar-title">{title}</div>
 
 			<nav className="sidebar-nav">
 				<Link
@@ -12,15 +12,15 @@ function Sidebar({ genres, activeGenre, counts }) {
 						activeGenre === null ? "sidebar-link-active" : "sidebar-link"
 					}
 				>
-					All Books
+					All Filters
 				</Link>
 
 				<div className="sidebar-section">
-					<div className="sidebar-heading">Genres</div>
+					<div className="sidebar-heading">Categories</div>
 					{genres.map((genre) => (
 						<Link
 							key={genre.name}
-							to={`/genre/${encodeURIComponent(genre.name)}`}
+							to={`/category/${encodeURIComponent(genre.name)}`}
 							className={
 								activeGenre === genre.name
 									? "sidebar-link-active"

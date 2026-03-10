@@ -1,11 +1,9 @@
 import { Hono } from "hono";
 import { selectDataSource } from "../lib/utils.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { signUserToken, requireUser } from "../lib/auth.js";
 
 const authRouter = new Hono();
-
-const JWT_SECRET = "dev-secret-change-in-prod";
 
 // POST /api/auth/register
 authRouter.post("/register", async (c) => {
@@ -30,13 +28,7 @@ authRouter.post("/register", async (c) => {
         VALUES (${email}, ${hash}, ${first_name ?? null}, ${last_name ?? null})
         RETURNING id, email, first_name, last_name, role
       `;
-
-			const token = jwt.sign(
-				{ sub: user.id, role: user.role },
-				JWT_SECRET,
-				{ expiresIn: "7d" },
-			);
-
+			const token = signUserToken(c.env, user);
 			return Response.json({ user, token });
 		} catch (e) {
 			return Response.json(
@@ -87,15 +79,30 @@ authRouter.post("/login", async (c) => {
 			);
 		}
 
-		const token = jwt.sign(
-			{ sub: user.id, role: user.role },
-			JWT_SECRET,
-			{ expiresIn: "7d" },
-		);
+		const token = signUserToken(c.env, user);
 
 		delete user.password_hash;
 
 		return Response.json({ user, token });
+	};
+
+	const mockLogic = async () => {
+		return Response.json(
+			{ error: "Auth API requires database connection" },
+			{ status: 503 },
+		);
+	};
+
+	return selectDataSource(c, dbLogic, mockLogic);
+});
+
+authRouter.get("/me", async (c) => {
+	const dbLogic = async (c) => {
+		const userOrResponse = requireUser(c);
+		if (userOrResponse instanceof Response) {
+			return userOrResponse;
+		}
+		return Response.json({ user: userOrResponse });
 	};
 
 	const mockLogic = async () => {

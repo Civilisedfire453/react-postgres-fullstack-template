@@ -5,14 +5,8 @@ function Breadcrumbs({ items, onNavigate }) {
 		<nav className="breadcrumbs">
 			{items.map((item, index) => {
 				const isLast = index === items.length - 1;
-
-				// Determine the appropriate link based on the item value
-				let linkTo = "/";
-				if (item.value && item.value !== "book") {
-					linkTo = `/genre/${encodeURIComponent(item.value)}`;
-				} else if (item.value === "book") {
-					linkTo = null; // Current book page, no link
-				}
+				const isClickable = !isLast && onNavigate;
+				const linkTo = !isLast && item.href ? item.href : null;
 
 				return (
 					<div key={index} className="breadcrumb-item">
@@ -20,17 +14,19 @@ function Breadcrumbs({ items, onNavigate }) {
 							<span className="breadcrumb-current">{item.label}</span>
 						) : (
 							<>
-								{linkTo ? (
-									<Link to={linkTo} className="breadcrumb-link">
-										{item.label}
-									</Link>
-								) : (
+								{isClickable ? (
 									<span
 										className="breadcrumb-link"
 										onClick={() => onNavigate && onNavigate(item.value)}
 									>
 										{item.label}
 									</span>
+								) : linkTo ? (
+									<Link to={linkTo} className="breadcrumb-link">
+										{item.label}
+									</Link>
+								) : (
+									<span className="breadcrumb-link">{item.label}</span>
 								)}
 								<span className="breadcrumb-separator">&gt;</span>
 							</>

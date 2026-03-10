@@ -1,9 +1,8 @@
 import { Hono } from "hono";
 import { selectDataSource } from "../lib/utils.js";
+import { requireAdmin } from "../lib/auth.js";
 
 const adminRouter = new Hono();
-
-// NOTE: Auth and RBAC will be added later; for now these endpoints are open.
 
 // POST /api/admin/products - create product with optional variants
 adminRouter.post("/products", async (c) => {
@@ -11,6 +10,10 @@ adminRouter.post("/products", async (c) => {
 	const { product, variants } = body;
 
 	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
 		const sql = c.env.SQL;
 
 		if (!product?.name) {
@@ -83,6 +86,10 @@ adminRouter.put("/products/:id", async (c) => {
 	const { name, description, brand, category, is_active } = body;
 
 	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
 		const sql = c.env.SQL;
 
 		const [updated] = await sql`
@@ -122,6 +129,10 @@ adminRouter.post("/variants/:id/adjust-inventory", async (c) => {
 	const { delta, reason } = body;
 
 	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
 		const sql = c.env.SQL;
 
 		if (!delta || delta === 0) {
@@ -173,6 +184,10 @@ adminRouter.get("/inventory", async (c) => {
 	const { low_stock } = c.req.query();
 
 	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
 		const sql = c.env.SQL;
 
 		let query = sql`
@@ -206,6 +221,10 @@ adminRouter.get("/inventory", async (c) => {
 // GET /api/admin/orders
 adminRouter.get("/orders", async (c) => {
 	const dbLogic = async (c) => {
+		const adminOrResponse = requireAdmin(c);
+		if (adminOrResponse instanceof Response) {
+			return adminOrResponse;
+		}
 		const sql = c.env.SQL;
 
 		const orders = await sql`
