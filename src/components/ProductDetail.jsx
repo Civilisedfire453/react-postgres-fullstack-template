@@ -52,9 +52,8 @@ function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	}
 
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
-	const fallbackImageUrl = `images/filters/generic.svg?seed=${encodeURIComponent(
-		String(product.id ?? product.name ?? "product"),
-	)}`;
+	const fallbackSeed = encodeURIComponent(String(product.id ?? product.name ?? "product"));
+	const fallbackImageUrl = `https://picsum.photos/seed/${fallbackSeed}/1200/800`;
 	const imageUrl = publicAssetUrl(primaryImage?.image_url || fallbackImageUrl);
 	const selectedVariant = product.variants?.find((v) => v.id === selectedVariantId);
 

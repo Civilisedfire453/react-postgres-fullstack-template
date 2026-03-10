@@ -3,9 +3,8 @@ import { publicAssetUrl } from "../lib/publicAssetUrl.js";
 
 function ProductCard({ product, onClick }) {
 	const primaryImage = product.images?.find((img) => img.is_primary) ?? product.images?.[0];
-	const fallbackImageUrl = `images/filters/generic.svg?seed=${encodeURIComponent(
-		String(product.id ?? product.name ?? "product"),
-	)}`;
+	const fallbackSeed = encodeURIComponent(String(product.id ?? product.name ?? "product"));
+	const fallbackImageUrl = `https://picsum.photos/seed/${fallbackSeed}/1200/800`;
 	const imageUrl = publicAssetUrl(primaryImage?.image_url || fallbackImageUrl);
 	const minPriceCents = product.variants?.length
 		? Math.min(...product.variants.map((v) => v.price_cents))

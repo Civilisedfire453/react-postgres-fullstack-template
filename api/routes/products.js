@@ -40,7 +40,7 @@ function getMockProducts() {
 			images: [
 				{
 					id: 101,
-					image_url: "/images/filters/pureflow-standard.svg",
+					image_url: "https://picsum.photos/seed/pureflow-standard/1200/800",
 					is_primary: true,
 				},
 			],
@@ -80,7 +80,7 @@ function getMockProducts() {
 			images: [
 				{
 					id: 102,
-					image_url: "/images/filters/aquamax-family.svg",
+					image_url: "https://picsum.photos/seed/aquamax-family/1200/800",
 					is_primary: true,
 				},
 			],
@@ -109,7 +109,7 @@ function getMockProducts() {
 			images: [
 				{
 					id: 103,
-					image_url: "/images/filters/hydroguard-whole-house.svg",
+					image_url: "https://picsum.photos/seed/hydroguard-whole-house/1200/800",
 					is_primary: true,
 				},
 			],
