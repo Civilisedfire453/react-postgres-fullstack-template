@@ -6,7 +6,9 @@
 	"$schema": "node_modules/wrangler/config-schema.json",
 	"name": "react-postgres-fullstack-template",
 	"main": "api/index.js",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"compatibility_date": "2025-10-08",
 	"observability": {
 		"enabled": true
@@ -15,17 +17,16 @@
 		"binding": "ASSETS",
 		"not_found_handling": "single-page-application"
 	},
-	// Hyperdrive binding is optional - if not provided, app will use mock data
-	// To enable Hyperdrive, uncomment and configure properly:
-	/*
-    "hyperdrive": [
-      {
-        "binding": "HYPERDRIVE",
-        "id": "YOUR_HYPERDRIVE_ID",
-        "localConnectionString": "postgresql://myuser:mypassword@localhost:5432/mydatabase"
-      }
-    ],
-    */
+	// Hyperdrive: use your Neon DB. Run once:
+	// npx wrangler hyperdrive create my-waterfilters-db --connection-string="YOUR_NEON_CONNECTION_STRING"
+	// Then paste the returned id below and set localConnectionString to the same Neon URL for local dev.
+	"hyperdrive": [
+		{
+			"binding": "HYPERDRIVE",
+			"id": "7a6652dbbb084b1d86ca650a2afb028b",
+			"localConnectionString": "postgresql://neondb_owner:npg_HnDu5TAvlw6U@ep-quiet-tree-a7rwmhmp-pooler.ap-southeast-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+		}
+	],
 	"placement": {
 		"mode": "smart"
 	},

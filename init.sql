@@ -101,6 +101,8 @@ CREATE TABLE IF NOT EXISTS orders (
     shipping_state VARCHAR(100),
     shipping_postcode VARCHAR(20),
     shipping_country VARCHAR(100),
+    customer_email VARCHAR(255),
+    customer_phone VARCHAR(50),
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -139,11 +141,11 @@ CREATE TABLE IF NOT EXISTS payments (
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
--- Seed an admin user (password hash to be replaced in real envs)
+-- Seed an admin user (login: admin@example.com / password: admin123)
 INSERT INTO users (email, password_hash, first_name, last_name, role)
 VALUES (
     'admin@example.com',
-    '$2b$10$abcdefghijklmnopqrstuv', -- placeholder bcrypt hash
+    '$2a$10$yiNvIpXehXpXzX5BCDnAM.wKmDHk1iqbRJ6clAXG/f8YFKznbXBL.',
     'Store',
     'Admin',
     'admin'
@@ -207,3 +209,7 @@ VALUES
     (5, '/images/filters/pureflow-cartridges.jpg', TRUE),
     (6, '/images/filters/aquamax-ro.jpg', TRUE)
 ON CONFLICT DO NOTHING;
+
+-- Add customer contact columns to orders if they don't exist (for existing DBs)
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_email VARCHAR(255);
+ALTER TABLE orders ADD COLUMN IF NOT EXISTS customer_phone VARCHAR(50);

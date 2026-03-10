@@ -4,6 +4,115 @@ import { createPurchase } from "../lib/fatzebra.js";
 
 const checkoutRouter = new Hono();
 
+// GET /api/checkout/config - returns public config for Fat Zebra SDK (e.g. merchant username)
+checkoutRouter.get("/config", async (c) => {
+	const username = c.env.FATZEBRA_USERNAME || null;
+	return Response.json({
+		fatZebraUsername: username,
+		currency: "AUD",
+	});
+});
+
+// POST /api/checkout/complete - called when Fat Zebra HPP payment succeeds; creates order from cart
+checkoutRouter.post("/complete", async (c) => {
+	const body = await c.req.json();
+	const {
+		cartId,
+		gatewayReference,
+		amountCents,
+		shipping,
+		customerEmail,
+		customerPhone,
+	} = body;
+
+	const dbLogic = async (c) => {
+		const sql = c.env.SQL;
+
+		if (!cartId) {
+			return Response.json({ error: "cartId is required" }, { status: 400 });
+		}
+
+		const result = await sql.begin(async (trx) => {
+			const carts = await trx`SELECT * FROM carts WHERE id = ${cartId} FOR UPDATE`;
+			if (carts.length === 0) throw new Error("Cart not found");
+			if (carts[0].status !== "active") {
+				return Response.json({ error: "Cart already converted" }, { status: 409 });
+			}
+
+			const items = await trx`
+        SELECT ci.quantity, v.id AS variant_id, v.price_cents, v.stock_quantity, p.id AS product_id
+        FROM cart_items ci
+        JOIN product_variants v ON v.id = ci.product_variant_id
+        JOIN products p ON p.id = v.product_id
+        WHERE ci.cart_id = ${cartId}
+      `;
+			if (items.length === 0) throw new Error("Cart is empty");
+
+			let subtotalCents = 0;
+			for (const row of items) {
+				if (row.stock_quantity < row.quantity) {
+					throw new Error(`Insufficient stock for variant ${row.variant_id}`);
+				}
+				subtotalCents += row.price_cents * row.quantity;
+			}
+			const taxCents = Math.round(subtotalCents * 0.1);
+			const shippingCents = subtotalCents > 10000 ? 0 : 1500;
+			const totalCents = subtotalCents + taxCents + shippingCents;
+
+			const [order] = await trx`
+        INSERT INTO orders (
+          user_id, status, payment_status,
+          subtotal_cents, tax_cents, shipping_cents, total_cents, currency,
+          shipping_name, shipping_address_line1, shipping_address_line2,
+          shipping_city, shipping_state, shipping_postcode, shipping_country,
+          customer_email, customer_phone
+        )
+        VALUES (
+          ${carts[0].user_id}, 'paid', 'paid',
+          ${subtotalCents}, ${taxCents}, ${shippingCents}, ${totalCents}, 'AUD',
+          ${shipping?.name ?? null}, ${shipping?.addressLine1 ?? null}, ${shipping?.addressLine2 ?? null},
+          ${shipping?.city ?? null}, ${shipping?.state ?? null}, ${shipping?.postcode ?? null}, ${shipping?.country ?? null},
+          ${customerEmail ?? null}, ${customerPhone ?? null}
+        )
+        RETURNING *
+      `;
+
+			for (const row of items) {
+				const lineTotal = row.price_cents * row.quantity;
+				await trx`
+          INSERT INTO order_items (order_id, product_variant_id, quantity, unit_price_cents, total_price_cents)
+          VALUES (${order.id}, ${row.variant_id}, ${row.quantity}, ${row.price_cents}, ${lineTotal})
+        `;
+				await trx`
+          UPDATE product_variants SET stock_quantity = stock_quantity - ${row.quantity}, updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${row.variant_id}
+        `;
+				await trx`
+          INSERT INTO inventory_adjustments (product_variant_id, delta, reason, order_id)
+          VALUES (${row.variant_id}, ${-row.quantity}, 'order', ${order.id})
+        `;
+			}
+
+			await trx`
+        INSERT INTO payments (order_id, gateway_reference, amount_cents, currency, status, raw_response)
+        VALUES (${order.id}, ${gatewayReference ?? null}, ${totalCents}, 'AUD', 'succeeded', ${JSON.stringify({ source: "hpp", cartId })})
+      `;
+
+			await trx`UPDATE carts SET status = 'converted', updated_at = CURRENT_TIMESTAMP WHERE id = ${cartId}`;
+
+			return { order, totalCents };
+		});
+
+		if (result instanceof Response) return result;
+		return Response.json({ orderId: result.order.id, status: "paid" });
+	};
+
+	const mockLogic = () =>
+		Response.json({ error: "Checkout requires database connection" }, { status: 503 });
+
+	return selectDataSource(c, dbLogic, mockLogic);
+});
+
 // POST /api/checkout/validate
 checkoutRouter.post("/validate", async (c) => {
 	const body = await c.req.json();
@@ -296,6 +405,34 @@ checkoutRouter.post("/pay", async (c) => {
 		} catch (err) {
 			console.error("Payment error", err);
 			const sql = c.env.SQL;
+
+			// Rollback inventory: restore stock when payment fails
+			const orderItems = await sql`
+        SELECT product_variant_id, quantity
+        FROM order_items
+        WHERE order_id = ${result.order.id}
+      `;
+			for (const oi of orderItems) {
+				await sql`
+          UPDATE product_variants
+          SET stock_quantity = stock_quantity + ${oi.quantity},
+              updated_at = CURRENT_TIMESTAMP
+          WHERE id = ${oi.product_variant_id}
+        `;
+				await sql`
+          INSERT INTO inventory_adjustments (
+            product_variant_id,
+            delta,
+            reason,
+            order_id
+          ) VALUES (
+            ${oi.product_variant_id},
+            ${oi.quantity},
+            'payment_failed_reversal',
+            ${result.order.id}
+          )
+        `;
+			}
 
 			await sql`
         UPDATE orders

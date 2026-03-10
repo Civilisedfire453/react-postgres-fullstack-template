@@ -17,7 +17,7 @@ function Sidebar({ genres, activeGenre, counts, title = "Filters" }) {
 
 				<div className="sidebar-section">
 					<div className="sidebar-heading">Categories</div>
-					{genres.map((genre) => (
+						{genres.map((genre) => (
 						<Link
 							key={genre.name}
 							to={`/category/${encodeURIComponent(genre.name)}`}
@@ -29,7 +29,7 @@ function Sidebar({ genres, activeGenre, counts, title = "Filters" }) {
 						>
 							{genre.name}
 							{counts && (
-								<span className="ml-2 text-xs text-gray-900">
+								<span className="ml-2 text-xs text-slate-400">
 									({genre.count})
 								</span>
 							)}
@@ -39,14 +39,13 @@ function Sidebar({ genres, activeGenre, counts, title = "Filters" }) {
 			</nav>
 
 			<div className="mt-auto pt-6 px-6">
-				<div className="text-xs text-gray-900">
-					Powered by
-					<br />
+				<div className="text-xs text-slate-400">
+					Powered by{" "}
 					<a
 						href="https://cloudflare.com"
 						target="_blank"
 						rel="noopener noreferrer"
-						className="text-blue-800 hover:underline"
+						className="text-teal-600 hover:text-teal-700"
 					>
 						Cloudflare
 					</a>

@@ -143,8 +143,13 @@ There are two different ways to deploy this application: Full Experience and Dem
 In addition to the Hyperdrive binding, configure these in your Cloudflare Worker environment (Dashboard → Workers & Pages → your project → Settings → Variables and Secrets):
 
 - `JWT_SECRET` (Secret): Secret key used to sign and verify JWTs for `/api/auth/*`.
-- `FATZEBRA_USERNAME` (Secret): Fat Zebra API username.
+- `FATZEBRA_USERNAME` (Secret): Fat Zebra API username (used for checkout; also exposed to frontend for SDK init).
 - `FATZEBRA_TOKEN` (Secret): Fat Zebra API token.
+
+### Admin & checkout
+
+- **Admin logic**: See [docs/ADMIN-LOGIC.md](docs/ADMIN-LOGIC.md) for how admin auth and inventory work.
+- **Fat Zebra checkout**: The cart includes a "Checkout with Fat Zebra" button. Set `FATZEBRA_USERNAME` and `FATZEBRA_TOKEN` as secrets to enable the hosted payment form.
 
 These are read in the Worker via `c.env.JWT_SECRET`, `c.env.FATZEBRA_USERNAME`, and `c.env.FATZEBRA_TOKEN`.
 

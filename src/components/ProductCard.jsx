@@ -3,37 +3,55 @@ function ProductCard({ product, onClick }) {
 	const minPriceCents = product.variants?.length
 		? Math.min(...product.variants.map((v) => v.price_cents))
 		: null;
+	const totalStock = product.variants?.reduce((sum, v) => sum + (v.stock_quantity ?? 0), 0) ?? 0;
+	const hasStock = totalStock > 0;
+	const isLowStock = hasStock && product.variants?.some((v) => v.stock_quantity > 0 && v.stock_quantity <= (v.reorder_threshold ?? 5));
 
 	return (
-		<div className="book-card cursor-pointer" onClick={onClick}>
-			<div className="book-card-image">
+		<div className="book-card cursor-pointer group hover-lift" onClick={onClick}>
+			<div className="book-card-image relative">
+				{!hasStock && (
+					<span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-slate-800/90 text-white text-xs font-medium z-10">
+						Out of stock
+					</span>
+				)}
+				{hasStock && isLowStock && (
+					<span className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-amber-500/90 text-white text-xs font-medium z-10">
+						Only {totalStock} left
+					</span>
+				)}
 				{primaryImage ? (
 					<img
 						src={primaryImage.image_url}
 						alt={product.name}
-						className="w-full h-full object-contain transition-transform hover:scale-[1.03] duration-300"
+						className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105"
 					/>
 				) : (
-					<div className="w-full h-full flex items-center justify-center text-gray-400 text-sm">
-						No image
+					<div className="w-full h-full flex items-center justify-center text-slate-400">
+						<svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14" />
+						</svg>
 					</div>
 				)}
 			</div>
 			<div className="book-card-content">
-				<h3 className="text-lg font-serif mb-1 line-clamp-1">{product.name}</h3>
 				{product.brand && (
-					<p className="text-gray-900 text-sm mb-2">{product.brand}</p>
+					<p className="text-teal-600 text-xs font-medium uppercase tracking-wide mb-1">{product.brand}</p>
 				)}
-				<p className="text-gray-900 text-sm overflow-hidden line-clamp-3 mb-4">
+				<h3 className="text-lg font-serif font-semibold text-slate-900 mb-1 line-clamp-1">{product.name}</h3>
+				<p className="text-slate-500 text-sm overflow-hidden line-clamp-2 mb-3">
 					{product.description}
 				</p>
 				{minPriceCents != null && (
-					<div className="text-gray-900 font-medium mb-2">
+					<div className="text-slate-900 font-semibold mb-3">
 						From ${(minPriceCents / 100).toFixed(2)}
 					</div>
 				)}
-				<button className="btn-primary w-full text-sm font-bold">
-					View details
+				<button
+					className="btn-primary w-full text-sm font-medium"
+					onClick={(e) => { e.preventDefault(); onClick?.(); }}
+				>
+					{hasStock ? "View details" : "Check back later"}
 				</button>
 			</div>
 		</div>

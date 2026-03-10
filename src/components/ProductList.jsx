@@ -55,33 +55,33 @@ function ProductList({ activeCategory }) {
 	if (loading) {
 		return (
 			<div className="flex justify-center items-center py-20">
-				<div className="h-10 w-10 border-2 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
+				<div className="h-10 w-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="space-y-6">
-			<div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+		<div className="space-y-8">
+			<div className="flex flex-col md:flex-row md:items-center gap-4 justify-between p-4 rounded-xl bg-white/60 border border-slate-200/80">
 				<input
 					type="text"
 					placeholder="Search filters..."
-					className="px-3 py-2 border border-gray-300 rounded-md w-full md:w-1/2"
+					className="px-4 py-2.5 border border-slate-200 rounded-xl w-full md:max-w-md focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500 outline-none transition-all"
 					value={search}
 					onChange={(e) => setSearch(e.target.value)}
 				/>
-				<label className="inline-flex items-center space-x-2 text-sm text-gray-700">
+				<label className="inline-flex items-center gap-2 text-sm text-slate-600 cursor-pointer select-none">
 					<input
 						type="checkbox"
-						className="mr-1"
 						checked={inStockOnly}
 						onChange={(e) => setInStockOnly(e.target.checked)}
+						className="rounded border-slate-300 text-teal-600 focus:ring-teal-500"
 					/>
-					<span>Show in-stock only</span>
+					<span>In stock only</span>
 				</label>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+			<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 product-grid">
 				{products.map((product) => (
 					<ProductCard
 						key={product.id}

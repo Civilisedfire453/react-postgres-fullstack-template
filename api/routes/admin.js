@@ -232,18 +232,23 @@ adminRouter.get("/orders", async (c) => {
         o.*,
         COALESCE(
           json_agg(
-            DISTINCT jsonb_build_object(
+            jsonb_build_object(
               'id', oi.id,
               'product_variant_id', oi.product_variant_id,
               'quantity', oi.quantity,
               'unit_price_cents', oi.unit_price_cents,
-              'total_price_cents', oi.total_price_cents
+              'total_price_cents', oi.total_price_cents,
+              'product_name', p.name,
+              'variant_name', pv.name
             )
+            ORDER BY oi.id
           ) FILTER (WHERE oi.id IS NOT NULL),
           '[]'
         ) AS items
       FROM orders o
       LEFT JOIN order_items oi ON oi.order_id = o.id
+      LEFT JOIN product_variants pv ON pv.id = oi.product_variant_id
+      LEFT JOIN products p ON p.id = pv.product_id
       GROUP BY o.id
       ORDER BY o.created_at DESC
     `;

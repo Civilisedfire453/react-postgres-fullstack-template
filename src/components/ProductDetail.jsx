@@ -2,7 +2,7 @@ import { useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import Breadcrumbs from "./Breadcrumbs.jsx";
 
-function ProductDetail({ productId, onCartUpdated }) {
+function ProductDetail({ productId, cartId, anonymousId, onCartUpdated }) {
 	const navigate = useNavigate();
 	const [product, setProduct] = useState(null);
 	const [selectedVariantId, setSelectedVariantId] = useState(null);
@@ -37,14 +37,14 @@ function ProductDetail({ productId, onCartUpdated }) {
 	if (loading) {
 		return (
 			<div className="flex justify-center items-center py-20">
-				<div className="h-10 w-10 border-2 border-blue-800 border-t-transparent rounded-full animate-spin"></div>
+				<div className="h-10 w-10 border-2 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
 			</div>
 		);
 	}
 
 	if (!product) {
 		return (
-			<div className="text-center py-20 text-gray-600">
+			<div className="text-center py-20 text-slate-600">
 				{error || "Product not found"}
 			</div>
 		);
@@ -72,16 +72,37 @@ function ProductDetail({ productId, onCartUpdated }) {
 		setSaving(true);
 		setError(null);
 		try {
+			let items = [{ productVariantId: selectedVariant.id, quantity }];
+			if (cartId && anonymousId) {
+				try {
+					const cartRes = await fetch(`/api/cart/${cartId}`);
+					if (cartRes.ok) {
+						const { cart } = await cartRes.json();
+						if (cart?.items?.length) {
+							const existing = cart.items.map((i) => ({
+								productVariantId: i.variantId,
+								quantity: i.quantity,
+							}));
+							const existingIdx = existing.findIndex((e) => e.productVariantId === selectedVariant.id);
+							if (existingIdx >= 0) {
+								existing[existingIdx].quantity += quantity;
+							} else {
+								existing.push({ productVariantId: selectedVariant.id, quantity });
+							}
+							items = existing;
+						}
+					}
+				} catch {
+					// ignore merge errors, use new item only
+				}
+			}
+
 			const res = await fetch("/api/cart", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
-					items: [
-						{
-							productVariantId: selectedVariant.id,
-							quantity: quantity,
-						},
-					],
+					anonymousId: anonymousId || undefined,
+					items,
 				}),
 			});
 
@@ -121,12 +142,10 @@ function ProductDetail({ productId, onCartUpdated }) {
 						<div className="md:w-2/3 lg:w-3/4 space-y-4">
 							<h1 className="mb-1">{product.name}</h1>
 							{product.brand && (
-								<h2 className="text-xl text-gray-900 mb-4 font-serif font-normal">
-									by {product.brand}
-								</h2>
+								<p className="text-teal-600 font-medium uppercase tracking-wide mb-4">{product.brand}</p>
 							)}
 
-							<p className="text-gray-900 leading-relaxed">
+							<p className="text-slate-600 leading-relaxed">
 								{product.description}
 							</p>
 
@@ -144,10 +163,10 @@ function ProductDetail({ productId, onCartUpdated }) {
 												<button
 													key={variant.id}
 													type="button"
-													className={`border rounded-lg p-3 text-left text-sm ${
+													className={`border rounded-xl p-3 text-left text-sm transition-all ${
 														isSelected
-															? "border-blue-800 bg-blue-50"
-															: "border-gray-200 hover:border-blue-300"
+															? "border-teal-500 bg-teal-50 ring-1 ring-teal-500/30"
+															: "border-slate-200 hover:border-teal-300"
 													} ${outOfStock ? "opacity-60 cursor-not-allowed" : ""}`}
 													onClick={() =>
 														!outOfStock &&
@@ -162,10 +181,16 @@ function ProductDetail({ productId, onCartUpdated }) {
 														{variant.pack_size > 1 &&
 															` • Pack of ${variant.pack_size}`}
 													</div>
-													<div className="text-xs text-gray-600 mt-1">
-														{outOfStock
-															? "Out of stock"
-															: `In stock: ${variant.stock_quantity}`}
+													<div className="text-xs mt-1">
+														{outOfStock ? (
+															<span className="text-red-600 font-medium">Out of stock</span>
+														) : (
+															<span className="text-slate-500">
+																{variant.stock_quantity <= (variant.reorder_threshold ?? 5)
+																	? `Only ${variant.stock_quantity} left`
+																	: `${variant.stock_quantity} in stock`}
+															</span>
+														)}
 													</div>
 												</button>
 											);
@@ -184,17 +209,17 @@ function ProductDetail({ productId, onCartUpdated }) {
 										onChange={(e) =>
 											setQuantity(Math.max(1, Number(e.target.value) || 1))
 										}
-										className="ml-2 w-20 px-2 py-1 border border-gray-300 rounded-md"
+										className="ml-2 w-20 px-2 py-1 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500/30 focus:border-teal-500"
 									/>
 								</label>
-								<button
-									type="button"
-									className="btn-primary"
-									onClick={handleAddToCart}
-									disabled={saving || !selectedVariant}
-								>
-									{saving ? "Adding..." : "Add to cart"}
-								</button>
+							<button
+								type="button"
+								className="btn-primary transition-transform duration-200 hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:hover:scale-100"
+								onClick={handleAddToCart}
+								disabled={saving || !selectedVariant}
+							>
+								{saving ? "Adding..." : "Add to cart"}
+							</button>
 								{error && (
 									<div className="text-sm text-red-600">{error}</div>
 								)}
